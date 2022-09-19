@@ -19,7 +19,7 @@ public class ECKeyLoader {
   }};
 
 
-  public static Map<String, ECKey> address2ECKeyMap = new HashMap<String, ECKey>();
+  public static Map<String, ECKey> address2ECKeyMap = new HashMap<>();
 
   static {
 

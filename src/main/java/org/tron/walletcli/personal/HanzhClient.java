@@ -1,5 +1,6 @@
 package org.tron.walletcli.personal;
 
+import java.util.Date;
 import lombok.extern.slf4j.Slf4j;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
@@ -23,58 +24,58 @@ public class HanzhClient {
   public static void main(String[] args) throws CipherException, IOException {
     HanzhClient client = new HanzhClient();
     // 1.创建账户 AccountCreateContract（支付了手续费）
-    //client.createAccount();
+    client.createAccount();
 
     // 2.转账（单位为 sun）
-    //client.sendCoin();
+    client.sendCoin();
 
     // 3.TRC-10代币转账
-    //client.transferAsset();
+    client.transferAsset();
 
     // 4.投票超级节点
-    //client.voteWitness();
+    client.voteWitness();
 
     // 5.创建超级节点候选人 WitnessCreateContract
-    // client.witnessCreate();
+    client.witnessCreate();
 
     // 6.发布TRC-10代币 AssetIssueContrac
-    //client.assetIssue();
+    client.assetIssue();
 
     //7.更新超级节点候选人URL WitnessUpdateContrac
-    // client.witnessUpdate();
+    client.witnessUpdate();
 
     // 8.购买代币
-    // client.participateAssetIssue();
+    client.participateAssetIssue();
 
     // 9.更新账户 AccountUpdateContract
-    // client.accountUpdate();
+    client.accountUpdate();
 
     // 10.质押资产 FreezeBalanceContrac
-    // client.freezeBalance();
+    client.freezeBalance();
 
     // 11.资产取消质押 UnfreezeBalanceContract
-    //client.unfreezeBalance();
+    client.unfreezeBalance();
 
     // 12.提取奖励 WithdrawBalanceContract
-    // client.withdrawBalance();
+    client.withdrawBalance();
 
     // 13.解锁发布的Token UnfreezeAssetContract ??结算了什么
-    //client.unfreezeAsset();
+    client.unfreezeAsset();
 
     //14.更新通证参数 UpdateAssetContract
-    //client.updateAsset();
+    client.updateAsset();
 
     // 15.创建提议 ProposalCreateContract
-    //client.proposalCreate();
+    client.proposalCreate();
 
     //16.赞成提议 ProposalApproveContract
-    ///client.proposalApprove();
+    client.proposalApprove();
 
     // 17.删除提议 ProposalDeleteContract
-    //client.proposalDelete();
+    client.proposalDelete();
 
     // 18.设置账户ID SetAccountIdContract¶
-    //client.setAccountId();
+    client.setAccountId();
   }
 
   private void createAccount() {
@@ -87,7 +88,7 @@ public class HanzhClient {
   }
 
 
-  public void sendCoin() throws CipherException, IOException {
+  public void sendCoin() {
     boolean result = walletApiWrapper
         .sendCoin("TYUMr6QQRFWy3bybuBRT2VV6rtUTkMNnKo", "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o",
             1000 * 1000 * 500L);
@@ -132,6 +133,11 @@ public class HanzhClient {
 
     String name = ByteArray.toHexString("01001101010101".getBytes());
 
+    Date endDate = Utils.strToDateLong("2025-09-16");
+    if (endDate == null) {
+      logger.error("endDate format error");
+      return;
+    }
     logger.info("assetIssue name:{}", name);
     boolean assetIssue = walletApiWrapper.createAssetIssue("TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf",
         name,
@@ -139,7 +145,7 @@ public class HanzhClient {
         1000000L, 1,
         1, 6,
         System.currentTimeMillis() + (1000 * 60),
-        Utils.strToDateLong("2025-09-16").getTime(),
+        endDate.getTime(),
         10000000L, 1000000L, 0,
         "测试", "测试", new HashMap<String, String>() {
           {
@@ -162,12 +168,13 @@ public class HanzhClient {
     String assetName = "1004964";
 
     try {
-      boolean result = walletApiWrapper.participateAssetIssue("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7",
-          "TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf", assetName, 1000);
+      String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+      String to = "TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf";
+      boolean result = walletApiWrapper.participateAssetIssue(from, to, assetName, 1000);
 
       logger.info("participateAssetIssue result:{}", result);
     } catch (Exception exception) {
-
+      logger.error(exception.getMessage());
     }
   }
 
@@ -178,7 +185,7 @@ public class HanzhClient {
 
       logger.info("accountUpdate result:{}", result);
     } catch (Exception exception) {
-
+      logger.error(exception.getMessage());
     }
   }
 
@@ -191,7 +198,7 @@ public class HanzhClient {
 
       logger.info("freezeBalance result:{}", result);
     } catch (Exception exception) {
-
+      logger.error(exception.getMessage());
     }
 
   }
@@ -205,7 +212,7 @@ public class HanzhClient {
 
       logger.info("unfreezeBalance result:{}", result);
     } catch (Exception exception) {
-
+      logger.error(exception.getMessage());
     }
   }
 
@@ -216,7 +223,7 @@ public class HanzhClient {
 
       logger.info("withdrawBalance result:{}", result);
     } catch (Exception exception) {
-
+      logger.error(exception.getMessage());
     }
   }
 
@@ -227,7 +234,7 @@ public class HanzhClient {
 
       logger.info("unfreezeAsset result:{}", result);
     } catch (Exception exception) {
-
+      logger.error(exception.getMessage());
     }
   }
 
@@ -239,7 +246,7 @@ public class HanzhClient {
 
       logger.info("updateAsset result:{}", result);
     } catch (Exception exception) {
-
+      logger.error(exception.getMessage());
     }
   }
 
@@ -254,7 +261,7 @@ public class HanzhClient {
 
       logger.info("proposalCreate result:{}", result);
     } catch (Exception exception) {
-
+      logger.error(exception.getMessage());
     }
   }
 
@@ -267,7 +274,7 @@ public class HanzhClient {
 
       logger.info("proposalApprove result:{}", result);
     } catch (Exception exception) {
-
+      logger.error(exception.getMessage());
     }
   }
 
@@ -279,7 +286,7 @@ public class HanzhClient {
 
       logger.info("proposalDelete result:{}", result);
     } catch (Exception exception) {
-
+      logger.error(exception.getMessage());
     }
 
   }
@@ -291,7 +298,7 @@ public class HanzhClient {
 
       logger.info("proposalDelete result:{}", result);
     } catch (Exception exception) {
-
+      logger.error(exception.getMessage());
     }
   }
 
