@@ -600,7 +600,7 @@ public class HanzhWalletApiWrapper {
       return false;
     }
 
-    // TODO 这个类型是什么意思
+    // 匿名交易合同，该类型已经不支持
     if (transaction.getRawData().getContract(0).getType()
         == Protocol.Transaction.Contract.ContractType.ShieldedTransferContract) {
       return false;
