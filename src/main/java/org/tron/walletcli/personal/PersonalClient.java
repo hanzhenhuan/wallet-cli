@@ -23,59 +23,82 @@ public class PersonalClient {
 
   public static void main(String[] args) throws CipherException, IOException {
     PersonalClient client = new PersonalClient();
-    // 1.创建账户 AccountCreateContract（支付了手续费）
-    client.createAccount();
 
-    // 2.转账（单位为 sun）
-    client.sendCoin();
-
-    // 3.TRC-10代币转账
-    client.transferAsset();
-
-    // 4.投票超级节点
-    client.voteWitness();
-
-    // 5.创建超级节点候选人 WitnessCreateContract
-    client.witnessCreate();
-
-    // 6.发布TRC-10代币 AssetIssueContrac
-    client.assetIssue();
-
-    //7.更新超级节点候选人URL WitnessUpdateContrac
-    client.witnessUpdate();
-
-    // 8.购买代币
-    client.participateAssetIssue();
-
-    // 9.更新账户 AccountUpdateContract
-    client.accountUpdate();
-
-    // 10.质押资产 FreezeBalanceContrac
-    client.freezeBalance();
-
-    // 11.资产取消质押 UnfreezeBalanceContract
-    client.unfreezeBalance();
-
-    // 12.提取奖励 WithdrawBalanceContract
-    client.withdrawBalance();
-
-    // 13.解锁发布的Token UnfreezeAssetContract ??结算了什么
-    client.unfreezeAsset();
-
-    //14.更新通证参数 UpdateAssetContract
-    client.updateAsset();
-
-    // 15.创建提议 ProposalCreateContract
-    client.proposalCreate();
-
-    //16.赞成提议 ProposalApproveContract
-    client.proposalApprove();
-
-    // 17.删除提议 ProposalDeleteContract
-    client.proposalDelete();
-
-    // 18.设置账户ID SetAccountIdContract¶
-    client.setAccountId();
+    String function = "sendCoin";
+    switch (function) {
+      case "createAccount":
+        // 1.创建账户 AccountCreateContract（支付了手续费）
+        client.createAccount();
+        break;
+      case "sendCoin":
+        // 2.转账（单位为 sun）
+        client.sendCoin();
+        break;
+      case "transferAsset":
+        // 3.TRC-10代币转账
+        client.transferAsset();
+        break;
+      case "voteWitness":
+        // 4.投票超级节点
+        client.voteWitness();
+        break;
+      case "witnessCreate":
+        // 5.创建超级节点候选人 WitnessCreateContract
+        client.witnessCreate();
+        break;
+      case "assetIssue":
+        // 6.发布TRC-10代币 AssetIssueContrac
+        client.assetIssue();
+        break;
+      case "witnessUpdate":
+        //7.更新超级节点候选人URL WitnessUpdateContrac
+        client.witnessUpdate();
+        break;
+      case "participateAssetIssue":
+        // 8.购买代币
+        client.participateAssetIssue();
+        break;
+      case "accountUpdate":
+        // 9.更新账户 AccountUpdateContract
+        client.accountUpdate();
+        break;
+      case "freezeBalance":
+        // 10.质押资产 FreezeBalanceContrac
+        client.freezeBalance();
+        break;
+      case "unfreezeBalance":
+        // 11.资产取消质押 UnfreezeBalanceContract
+        client.unfreezeBalance();
+        break;
+      case "withdrawBalance":
+        // 12.提取奖励 WithdrawBalanceContract
+        client.withdrawBalance();
+        break;
+      case "unfreezeAsset":
+        // 13.解锁发布的Token UnfreezeAssetContract ??结算了什么
+        client.unfreezeAsset();
+        break;
+      case "updateAsset":
+        //14.更新通证参数 UpdateAssetContract
+        client.updateAsset();
+        break;
+      case "proposalCreate":
+        // 15.创建提议 ProposalCreateContract
+        client.proposalCreate();
+        break;
+      case "proposalApprove":
+        //16.赞成提议 ProposalApproveContract
+        client.proposalApprove();
+        break;
+      case "proposalDelete":
+        // 17.删除提议 ProposalDeleteContract
+        client.proposalDelete();
+        break;
+      case "setAccountId":
+        // 18.设置账户ID SetAccountIdContract¶
+        client.setAccountId();
+        break;
+    }
   }
 
   private void createAccount() {
@@ -227,7 +250,7 @@ public class PersonalClient {
   private void withdrawBalance() {
     try {
 
-      String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+      String from = "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o";
       boolean result = personalWalletApiWrapper.withdrawBalance(from);
 
       logger.info("withdrawBalance result:{}", result);
