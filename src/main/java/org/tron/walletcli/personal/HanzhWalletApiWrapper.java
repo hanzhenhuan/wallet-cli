@@ -1,5 +1,11 @@
 package org.tron.walletcli.personal;
 
+import static org.tron.protos.contract.AssetIssueContractOuterClass.AssetIssueContract;
+import static org.tron.protos.contract.AssetIssueContractOuterClass.ParticipateAssetIssueContract;
+import static org.tron.protos.contract.AssetIssueContractOuterClass.TransferAssetContract;
+import static org.tron.protos.contract.AssetIssueContractOuterClass.UnfreezeAssetContract;
+import static org.tron.protos.contract.AssetIssueContractOuterClass.UpdateAssetContract;
+
 import com.google.protobuf.ByteString;
 import com.typesafe.config.Config;
 import java.io.IOException;
@@ -18,7 +24,6 @@ import org.tron.core.exception.CipherException;
 import org.tron.protos.Protocol;
 import org.tron.protos.Protocol.Transaction;
 import org.tron.protos.contract.AccountContract;
-import org.tron.protos.contract.AssetIssueContractOuterClass;
 import org.tron.protos.contract.BalanceContract;
 import org.tron.protos.contract.ProposalContract;
 import org.tron.protos.contract.WitnessContract;
@@ -127,7 +132,7 @@ public class HanzhWalletApiWrapper {
     byte[] toAddress = WalletApi.decodeFromBase58Check(to);
     byte[] asset = assetName.getBytes();
 
-    AssetIssueContractOuterClass.TransferAssetContract contract = createTransferAssetContract(
+    TransferAssetContract contract = createTransferAssetContract(
         toAddress, asset, fromAddress, amount);
 
     GrpcAPI.TransactionExtention extention = rpcCli.createTransferAssetTransaction2(contract);
@@ -200,7 +205,7 @@ public class HanzhWalletApiWrapper {
     byte[] toAddress = WalletApi.decodeFromBase58Check(to);
     byte[] asset = assetName.getBytes();
 
-    AssetIssueContractOuterClass.ParticipateAssetIssueContract contract = createParticipateAssetIssueContract(
+    ParticipateAssetIssueContract contract = createParticipateAssetIssueContract(
         toAddress, asset, fromAddress, amount);
 
     GrpcAPI.TransactionExtention extention = rpcCli
@@ -324,7 +329,7 @@ public class HanzhWalletApiWrapper {
       return false;
     }
 
-    AssetIssueContractOuterClass.UnfreezeAssetContract.Builder builder = AssetIssueContractOuterClass.UnfreezeAssetContract
+    UnfreezeAssetContract.Builder builder = UnfreezeAssetContract
         .newBuilder();
     ByteString byteAddress = ByteString.copyFrom(fromAddress);
     builder.setOwnerAddress(byteAddress);
@@ -348,7 +353,7 @@ public class HanzhWalletApiWrapper {
       return false;
     }
 
-    AssetIssueContractOuterClass.UpdateAssetContract.Builder builder = AssetIssueContractOuterClass.UpdateAssetContract
+    UpdateAssetContract.Builder builder = UpdateAssetContract
         .newBuilder();
     ByteString byteAddress = ByteString.copyFrom(fromAddress);
     builder.setOwnerAddress(byteAddress);
@@ -463,10 +468,10 @@ public class HanzhWalletApiWrapper {
   }
 
 
-  private AssetIssueContractOuterClass.ParticipateAssetIssueContract createParticipateAssetIssueContract(
-      byte[] to, byte[] assertName, byte[] owner, long amount) {
-    AssetIssueContractOuterClass.ParticipateAssetIssueContract.Builder builder =
-        AssetIssueContractOuterClass.ParticipateAssetIssueContract.newBuilder();
+  private ParticipateAssetIssueContract createParticipateAssetIssueContract(byte[] to,
+      byte[] assertName, byte[] owner, long amount) {
+
+    ParticipateAssetIssueContract.Builder builder = ParticipateAssetIssueContract.newBuilder();
 
     builder.setToAddress(ByteString.copyFrom(to));
     builder.setAssetName(ByteString.copyFrom(assertName));
@@ -477,10 +482,10 @@ public class HanzhWalletApiWrapper {
   }
 
 
-  public static AssetIssueContractOuterClass.TransferAssetContract createTransferAssetContract(
+  public static TransferAssetContract createTransferAssetContract(
       byte[] to, byte[] assertName, byte[] owner, long amount) {
-    AssetIssueContractOuterClass.TransferAssetContract.Builder builder =
-        AssetIssueContractOuterClass.TransferAssetContract.newBuilder();
+    TransferAssetContract.Builder builder =
+        TransferAssetContract.newBuilder();
 
     ByteString bsTo = ByteString.copyFrom(to);
     ByteString bsName = ByteString.copyFrom(assertName);
@@ -527,8 +532,7 @@ public class HanzhWalletApiWrapper {
       return false;
     }
 
-    AssetIssueContractOuterClass.AssetIssueContract.Builder builder = AssetIssueContractOuterClass
-        .AssetIssueContract.newBuilder()
+    AssetIssueContract.Builder builder = AssetIssueContract.newBuilder()
         .setOwnerAddress(ByteString.copyFrom(fromAddress))
         .setName(ByteString.copyFrom(name.getBytes()))
         .setAbbr(ByteString.copyFrom(abbrName.getBytes()))
@@ -548,8 +552,10 @@ public class HanzhWalletApiWrapper {
       String amountStr = frozenSupply.get(daysStr);
       long amount = Long.parseLong(amountStr);
       long days = Long.parseLong(daysStr);
-      AssetIssueContractOuterClass.AssetIssueContract.FrozenSupply.Builder frozenSupplyBuilder
-          = AssetIssueContractOuterClass.AssetIssueContract.FrozenSupply.newBuilder();
+
+      AssetIssueContract.FrozenSupply.Builder frozenSupplyBuilder = AssetIssueContract.FrozenSupply
+          .newBuilder();
+
       frozenSupplyBuilder.setFrozenAmount(amount);
       frozenSupplyBuilder.setFrozenDays(days);
       builder.addFrozenSupply(frozenSupplyBuilder.build());
