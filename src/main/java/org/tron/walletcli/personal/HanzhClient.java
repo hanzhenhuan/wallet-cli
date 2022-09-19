@@ -24,10 +24,10 @@ public class HanzhClient {
   public static void main(String[] args) throws CipherException, IOException {
     HanzhClient client = new HanzhClient();
     // 1.创建账户 AccountCreateContract（支付了手续费）
-    client.createAccount();
+    //client.createAccount();
 
     // 2.转账（单位为 sun）
-    client.sendCoin();
+    //client.sendCoin();
 
     // 3.TRC-10代币转账
     //client.transferAsset();
@@ -90,8 +90,8 @@ public class HanzhClient {
 
   public void sendCoin() throws CipherException, IOException {
     boolean result = walletApiWrapper
-        .sendCoin("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7", "TYUMr6QQRFWy3bybuBRT2VV6rtUTkMNnKo",
-            1000 * 1000 * 20L);
+        .sendCoin("TYUMr6QQRFWy3bybuBRT2VV6rtUTkMNnKo", "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o",
+            1000 * 1000 * 500L);
 
     logger.info("sendCoin result:{}", result);
   }
