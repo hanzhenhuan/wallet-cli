@@ -11,6 +11,7 @@ import com.typesafe.config.Config;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.tron.api.GrpcAPI;
 import org.tron.common.crypto.ECKey;
@@ -548,9 +549,9 @@ public class HanzhWalletApiWrapper {
         .setFreeAssetNetLimit(freeNetLimit)
         .setPublicFreeAssetNetLimit(publicFreeNetLimit);
 
-    for (String daysStr : frozenSupply.keySet()) {
-      String amountStr = frozenSupply.get(daysStr);
-      long amount = Long.parseLong(amountStr);
+    Set<String> keySet = frozenSupply.keySet();
+    for (String daysStr : keySet) {
+      long amount = Long.parseLong(frozenSupply.get(daysStr));
       long days = Long.parseLong(daysStr);
 
       AssetIssueContract.FrozenSupply.Builder frozenSupplyBuilder = AssetIssueContract.FrozenSupply
