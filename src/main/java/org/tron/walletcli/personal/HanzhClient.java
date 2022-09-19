@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
 import org.tron.core.exception.CipherException;
-import org.tron.walletserver.WalletApi;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -81,8 +80,8 @@ public class HanzhClient {
   private void createAccount() {
 
     boolean result = walletApiWrapper
-        .createAccount("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7", "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o",
-            1);
+        .createAccount("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7", "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o"
+        );
 
     logger.info("createAccount result:{}", result);
   }

@@ -28,9 +28,8 @@ import org.tron.walletserver.WalletApi;
 @Slf4j
 public class HanzhWalletApiWrapper {
 
-  private static GrpcClient rpcCli = init();
+  private static final GrpcClient rpcCli = init();
 
-  private static int rpcVersion = 0;
 
   public static GrpcClient init() {
     Config config = Configuration.getByPath("config.conf");
@@ -48,10 +47,6 @@ public class HanzhWalletApiWrapper {
     } else {
       WalletApi.setAddressPreFixByte(Parameter.CommonConstant.ADD_PRE_FIX_BYTE_TESTNET);
     }
-    if (config.hasPath("RPC_version")) {
-      rpcVersion = config.getInt("RPC_version");
-      System.out.println("WalletApi getRpcVsersion: " + rpcVersion);
-    }
 
     return new GrpcClient(fullNode, solidityNode);
   }
@@ -61,10 +56,21 @@ public class HanzhWalletApiWrapper {
   }
 
 
-  public boolean createAccount(String from, String to, int type) {
-    byte[] ownerAddress = WalletApi.decodeFromBase58Check(from);
-    byte[] toAddress = WalletApi.decodeFromBase58Check(to);
+  /**
+   * 创建账号
+   *
+   * @param owner   合约持有人地址
+   * @param account 将要创建的账户地址
+   */
+  public boolean createAccount(String owner, String account) {
 
+    byte[] ownerAddress = WalletApi.decodeFromBase58Check(owner);
+    byte[] toAddress = WalletApi.decodeFromBase58Check(account);
+
+    if (ownerAddress == null || toAddress == null) {
+      logger.info("createAccount param illegal ");
+      return false;
+    }
     AccountContract.AccountCreateContract.Builder builder = AccountContract.AccountCreateContract
         .newBuilder();
     builder.setOwnerAddress(ByteString.copyFrom(ownerAddress));
@@ -75,26 +81,30 @@ public class HanzhWalletApiWrapper {
       logger.info("createAccount extention:{}", extention);
       return false;
     }
-    return processTransactionExtention(from, extention);
+    return processTransactionExtention(owner, extention);
   }
 
   /**
    * 转账TRX
    *
-   * @param from   address
-   * @param to     address
-   * @param amount sun
+   * @param owner  合约持有人地址
+   * @param to     目标账户地址
+   * @param amount 转账金额，单位为 sun
    */
-  public boolean sendCoin(String from, String to, Long amount) throws CipherException, IOException {
-    byte[] ownerAddress = WalletApi.decodeFromBase58Check(from);
+  public boolean sendCoin(String owner, String to, Long amount) {
+    byte[] ownerAddress = WalletApi.decodeFromBase58Check(owner);
     byte[] toAddress = WalletApi.decodeFromBase58Check(to);
+
+    if (ownerAddress == null || toAddress == null) {
+      logger.info("createAccount param illegal ");
+      return false;
+    }
 
     BalanceContract.TransferContract.Builder builder = BalanceContract.TransferContract
         .newBuilder();
-    ByteString bsTo = ByteString.copyFrom(toAddress);
-    ByteString bsOwner = ByteString.copyFrom(ownerAddress);
-    builder.setToAddress(bsTo);
-    builder.setOwnerAddress(bsOwner);
+
+    builder.setToAddress(ByteString.copyFrom(toAddress));
+    builder.setOwnerAddress(ByteString.copyFrom(ownerAddress));
     builder.setAmount(amount);
 
     BalanceContract.TransferContract transferContract = builder.build();
@@ -104,20 +114,12 @@ public class HanzhWalletApiWrapper {
       logger.info("createTransferAssetTransaction2 extention:{}", extention);
       return false;
     }
-    return processTransactionExtention(from, extention);
+    return processTransactionExtention(owner, extention);
   }
 
 
   /**
    * .TRC-10代币转账
-   *
-   * @param from
-   * @param to
-   * @param assetName
-   * @param amount
-   * @return
-   * @throws CipherException
-   * @throws IOException
    */
   public boolean transferAsset(String from, String to, String assetName, long amount)
       throws CipherException, IOException {
@@ -140,15 +142,15 @@ public class HanzhWalletApiWrapper {
 
   /**
    * 投票超级节点 VoteWitnessContract
-   *
-   * @param from
-   * @param to
-   * @param count
-   * @return
    */
   public boolean voteWitness(String from, String to, long count) {
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
     byte[] toAddress = WalletApi.decodeFromBase58Check(to);
+
+    if (fromAddress == null || toAddress == null) {
+      logger.info("createAccount param illegal ");
+      return false;
+    }
 
     WitnessContract.VoteWitnessContract.Builder builder = WitnessContract.VoteWitnessContract
         .newBuilder();
@@ -171,6 +173,11 @@ public class HanzhWalletApiWrapper {
 
   public boolean witnessCreate(String from, String url) {
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
+
+    if (fromAddress == null) {
+      logger.info("createAccount param illegal ");
+      return false;
+    }
 
     WitnessContract.WitnessCreateContract.Builder builder = WitnessContract.WitnessCreateContract
         .newBuilder();
@@ -209,6 +216,11 @@ public class HanzhWalletApiWrapper {
   public boolean accountUpdate(String from, String accountName) {
 
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
+    if (fromAddress == null) {
+      logger.info("createAccount param illegal ");
+      return false;
+    }
+
     AccountContract.AccountUpdateContract.Builder builder = AccountContract.AccountUpdateContract
         .newBuilder();
     ByteString basAddreess = ByteString.copyFrom(fromAddress);
@@ -229,6 +241,11 @@ public class HanzhWalletApiWrapper {
 
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
     byte[] toAddress = WalletApi.decodeFromBase58Check(to);
+
+    if (fromAddress == null || toAddress == null) {
+      logger.info("createAccount param illegal ");
+      return false;
+    }
 
     BalanceContract.FreezeBalanceContract.Builder builder = BalanceContract.FreezeBalanceContract
         .newBuilder();
@@ -255,6 +272,11 @@ public class HanzhWalletApiWrapper {
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
     byte[] toAddress = WalletApi.decodeFromBase58Check(to);
 
+    if (fromAddress == null || toAddress == null) {
+      logger.info("createAccount param illegal ");
+      return false;
+    }
+
     BalanceContract.UnfreezeBalanceContract.Builder builder = BalanceContract.UnfreezeBalanceContract
         .newBuilder();
     ByteString byteAddress = ByteString.copyFrom(fromAddress);
@@ -274,6 +296,11 @@ public class HanzhWalletApiWrapper {
   public boolean withdrawBalance(String from) {
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
 
+    if (fromAddress == null) {
+      logger.info("createAccount param illegal ");
+      return false;
+    }
+
     BalanceContract.WithdrawBalanceContract.Builder builder = BalanceContract.WithdrawBalanceContract
         .newBuilder();
     ByteString byteAddress = ByteString.copyFrom(fromAddress);
@@ -291,6 +318,11 @@ public class HanzhWalletApiWrapper {
 
   public boolean unfreezeAsset(String from) {
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
+
+    if (fromAddress == null) {
+      logger.info("createAccount param illegal ");
+      return false;
+    }
 
     AssetIssueContractOuterClass.UnfreezeAssetContract.Builder builder = AssetIssueContractOuterClass.UnfreezeAssetContract
         .newBuilder();
@@ -310,6 +342,11 @@ public class HanzhWalletApiWrapper {
       long newPublicLimit) {
 
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
+
+    if (fromAddress == null) {
+      logger.info("createAccount param illegal ");
+      return false;
+    }
 
     AssetIssueContractOuterClass.UpdateAssetContract.Builder builder = AssetIssueContractOuterClass.UpdateAssetContract
         .newBuilder();
@@ -332,6 +369,11 @@ public class HanzhWalletApiWrapper {
   public boolean proposalCreate(String from, long id, long val) {
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
 
+    if (fromAddress == null) {
+      logger.info("createAccount param illegal ");
+      return false;
+    }
+
     HashMap<Long, Long> parametersMap = new HashMap<>();
     parametersMap.put(id, val);
 
@@ -353,6 +395,11 @@ public class HanzhWalletApiWrapper {
 
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
 
+    if (fromAddress == null) {
+      logger.info("createAccount param illegal ");
+      return false;
+    }
+
     ProposalContract.ProposalApproveContract.Builder builder = ProposalContract.ProposalApproveContract
         .newBuilder();
     builder.setOwnerAddress(ByteString.copyFrom(fromAddress));
@@ -372,6 +419,10 @@ public class HanzhWalletApiWrapper {
   public boolean proposalDelete(String from, long id) {
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
 
+    if (fromAddress == null) {
+      logger.info("createAccount param illegal ");
+      return false;
+    }
     ProposalContract.ProposalDeleteContract.Builder builder = ProposalContract.ProposalDeleteContract
         .newBuilder();
     builder.setOwnerAddress(ByteString.copyFrom(fromAddress));
@@ -389,6 +440,11 @@ public class HanzhWalletApiWrapper {
   public boolean setAccountId(String from, String id) {
 
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
+
+    if (fromAddress == null) {
+      logger.info("createAccount param illegal ");
+      return false;
+    }
 
     AccountContract.SetAccountIdContract.Builder builder = AccountContract.SetAccountIdContract
         .newBuilder();
@@ -409,14 +465,12 @@ public class HanzhWalletApiWrapper {
 
   private AssetIssueContractOuterClass.ParticipateAssetIssueContract createParticipateAssetIssueContract(
       byte[] to, byte[] assertName, byte[] owner, long amount) {
-    AssetIssueContractOuterClass.ParticipateAssetIssueContract.Builder builder = AssetIssueContractOuterClass.ParticipateAssetIssueContract
-        .newBuilder();
-    ByteString bsTo = ByteString.copyFrom(to);
-    ByteString bsName = ByteString.copyFrom(assertName);
-    ByteString bsOwner = ByteString.copyFrom(owner);
-    builder.setToAddress(bsTo);
-    builder.setAssetName(bsName);
-    builder.setOwnerAddress(bsOwner);
+    AssetIssueContractOuterClass.ParticipateAssetIssueContract.Builder builder =
+        AssetIssueContractOuterClass.ParticipateAssetIssueContract.newBuilder();
+
+    builder.setToAddress(ByteString.copyFrom(to));
+    builder.setAssetName(ByteString.copyFrom(assertName));
+    builder.setOwnerAddress(ByteString.copyFrom(owner));
     builder.setAmount(amount);
 
     return builder.build();
@@ -425,8 +479,9 @@ public class HanzhWalletApiWrapper {
 
   public static AssetIssueContractOuterClass.TransferAssetContract createTransferAssetContract(
       byte[] to, byte[] assertName, byte[] owner, long amount) {
-    AssetIssueContractOuterClass.TransferAssetContract.Builder builder = AssetIssueContractOuterClass.TransferAssetContract
-        .newBuilder();
+    AssetIssueContractOuterClass.TransferAssetContract.Builder builder =
+        AssetIssueContractOuterClass.TransferAssetContract.newBuilder();
+
     ByteString bsTo = ByteString.copyFrom(to);
     ByteString bsName = ByteString.copyFrom(assertName);
     ByteString bsOwner = ByteString.copyFrom(owner);
@@ -457,7 +512,7 @@ public class HanzhWalletApiWrapper {
    * @param description        通行证描述
    * @param url                通证的官方网站地址
    * @param frozenSupply       通证发行者发行的时候指定冻结的通证数
-   * @return
+   * @return 结果
    */
   public boolean createAssetIssue(String from, String name, String abbrName, Long totalSupply,
       Integer trxNum,
@@ -466,66 +521,28 @@ public class HanzhWalletApiWrapper {
       String description, String url, Map<String, String> frozenSupply)
       throws CipherException, IOException {
 
-    AssetIssueContractOuterClass.AssetIssueContract.Builder builder = AssetIssueContractOuterClass.AssetIssueContract
-        .newBuilder();
-    builder.setOwnerAddress(ByteString.copyFrom(WalletApi.decodeFromBase58Check(from)));
-    builder.setName(ByteString.copyFrom(name.getBytes()));
-    builder.setAbbr(ByteString.copyFrom(abbrName.getBytes()));
-
-    if (totalSupply <= 0) {
-      System.out.println("totalSupply should greater than 0. but really is " + totalSupply);
-      return false;
-    }
-    builder.setTotalSupply(totalSupply);
-
-    if (trxNum <= 0) {
-      System.out.println("trxNum should greater than 0. but really is " + trxNum);
-      return false;
-    }
-    builder.setTrxNum(trxNum);
-
-    if (icoNum <= 0) {
-      System.out.println("num should greater than 0. but really is " + icoNum);
-      return false;
-    }
-    builder.setNum(icoNum);
-
-    if (precision < 0) {
-      System.out.println("precision should greater or equal to 0. but really is " + precision);
-      return false;
-    }
-    builder.setPrecision(precision);
-
-    long now = System.currentTimeMillis();
-    if (startTime <= now) {
-      System.out.println("startTime should greater than now. but really is startTime("
-          + startTime + ") now(" + now + ")");
-      return false;
-    }
-    if (endTime <= startTime) {
-      System.out.println("endTime should greater or equal to startTime. but really is endTime("
-          + endTime + ") startTime(" + startTime + ")");
+    byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
+    if (fromAddress == null) {
+      logger.info("createAccount param illegal ");
       return false;
     }
 
-    if (freeNetLimit < 0) {
-      System.out.println("freeAssetNetLimit should greater or equal to 0. but really is "
-          + freeNetLimit);
-      return false;
-    }
-    if (publicFreeNetLimit < 0) {
-      System.out.println("publicFreeAssetNetLimit should greater or equal to 0. but really is "
-          + publicFreeNetLimit);
-      return false;
-    }
-
-    builder.setStartTime(startTime);
-    builder.setEndTime(endTime);
-    builder.setVoteScore(voteScore);
-    builder.setDescription(ByteString.copyFrom(description.getBytes()));
-    builder.setUrl(ByteString.copyFrom(url.getBytes()));
-    builder.setFreeAssetNetLimit(freeNetLimit);
-    builder.setPublicFreeAssetNetLimit(publicFreeNetLimit);
+    AssetIssueContractOuterClass.AssetIssueContract.Builder builder = AssetIssueContractOuterClass
+        .AssetIssueContract.newBuilder()
+        .setOwnerAddress(ByteString.copyFrom(fromAddress))
+        .setName(ByteString.copyFrom(name.getBytes()))
+        .setAbbr(ByteString.copyFrom(abbrName.getBytes()))
+        .setTotalSupply(totalSupply)
+        .setTrxNum(trxNum)
+        .setNum(icoNum)
+        .setPrecision(precision)
+        .setStartTime(startTime)
+        .setEndTime(endTime)
+        .setVoteScore(voteScore)
+        .setDescription(ByteString.copyFrom(description.getBytes()))
+        .setUrl(ByteString.copyFrom(url.getBytes()))
+        .setFreeAssetNetLimit(freeNetLimit)
+        .setPublicFreeAssetNetLimit(publicFreeNetLimit);
 
     for (String daysStr : frozenSupply.keySet()) {
       String amountStr = frozenSupply.get(daysStr);
@@ -549,7 +566,10 @@ public class HanzhWalletApiWrapper {
   public boolean witnessUpdate(String from, String url) {
 
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
-
+    if (fromAddress == null) {
+      logger.info("witnessUpdate param illegal ");
+      return false;
+    }
     WitnessContract.WitnessUpdateContract.Builder builder = WitnessContract.WitnessUpdateContract
         .newBuilder();
     builder.setOwnerAddress(ByteString.copyFrom(fromAddress));
@@ -594,8 +614,7 @@ public class HanzhWalletApiWrapper {
     return false;
   }
 
-  private Protocol.Transaction signTransaction(String address, Protocol.Transaction transaction)
-      throws CipherException, IOException {
+  private Protocol.Transaction signTransaction(String address, Protocol.Transaction transaction) {
 
     ECKey ecKey = ECKeyLoader.getECKeyByAddress(address);
 
@@ -621,8 +640,7 @@ public class HanzhWalletApiWrapper {
 
 
   public static String getTransactionHash(Transaction transaction) {
-    String txid = ByteArray.toHexString(Sha256Sm3Hash.hash(transaction.getRawData().toByteArray()));
-    return txid;
+    return ByteArray.toHexString(Sha256Sm3Hash.hash(transaction.getRawData().toByteArray()));
   }
 
 

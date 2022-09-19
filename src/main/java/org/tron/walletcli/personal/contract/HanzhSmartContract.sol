@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 contract HanzhSmartContract {
 
-    unit
+    uint storedData;
     function readContract() public {
 
     }
