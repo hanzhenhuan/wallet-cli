@@ -13,16 +13,16 @@ import java.util.HashMap;
  * 核心协议 https://tronprotocol.github.io/documentation-zh/mechanism-algorithm/system-contracts/
  */
 @Slf4j
-public class HanzhClient {
+public class PersonalClient {
 
-  HanzhWalletApiWrapper walletApiWrapper;
+  PersonalWalletApiWrapper personalWalletApiWrapper;
 
-  public HanzhClient() {
-    this.walletApiWrapper = new HanzhWalletApiWrapper();
+  public PersonalClient() {
+    this.personalWalletApiWrapper = new PersonalWalletApiWrapper();
   }
 
   public static void main(String[] args) throws CipherException, IOException {
-    HanzhClient client = new HanzhClient();
+    PersonalClient client = new PersonalClient();
     // 1.创建账户 AccountCreateContract（支付了手续费）
     client.createAccount();
 
@@ -80,18 +80,18 @@ public class HanzhClient {
 
   private void createAccount() {
 
-    boolean result = walletApiWrapper
-        .createAccount("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7", "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o"
-        );
+    String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+    String to = "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o";
+    boolean result = personalWalletApiWrapper.createAccount(from, to);
 
     logger.info("createAccount result:{}", result);
   }
 
 
   public void sendCoin() {
-    boolean result = walletApiWrapper
-        .sendCoin("TYUMr6QQRFWy3bybuBRT2VV6rtUTkMNnKo", "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o",
-            1000 * 1000 * 500L);
+    String from = "TYUMr6QQRFWy3bybuBRT2VV6rtUTkMNnKo";
+    String to = "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o";
+    boolean result = personalWalletApiWrapper.sendCoin(from, to, 1000 * 1000 * 500L);
 
     logger.info("sendCoin result:{}", result);
   }
@@ -99,9 +99,9 @@ public class HanzhClient {
   private void transferAsset() throws CipherException, IOException {
     String assetName = "1004964";//ByteArray.toHexString("01001101010101".getBytes());
 
-    boolean result = walletApiWrapper
-        .transferAsset("TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf", "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7",
-            assetName, 1000L);
+    String from = "TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf";
+    String to = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+    boolean result = personalWalletApiWrapper.transferAsset(from, to, assetName, 1000L);
 
     logger.info("transferAsset result:{}", result);
 
@@ -115,16 +115,18 @@ public class HanzhClient {
 
     //WalletApi.encode58Check(proposerAddress)
 
+    String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
     String to = "TPffmvjxEcvZefQqS7QYvL1Der3uiguikE";
 
-    boolean result = walletApiWrapper.voteWitness("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7",
-        to, 4L);
+    boolean result = personalWalletApiWrapper.voteWitness(from, to, 4L);
 
     logger.info("voteWitness result:{}", result);
   }
 
   private void witnessCreate() {
-    boolean result = walletApiWrapper.witnessCreate("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7", "url");
+    String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+    String url = "url";
+    boolean result = personalWalletApiWrapper.witnessCreate(from, url);
 
     logger.info("witnessCreate result:{}", result);
   }
@@ -139,8 +141,8 @@ public class HanzhClient {
       return;
     }
     logger.info("assetIssue name:{}", name);
-    boolean assetIssue = walletApiWrapper.createAssetIssue("TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf",
-        name,
+    String from = "TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf";
+    boolean assetIssue = personalWalletApiWrapper.createAssetIssue(from, name,
         ByteArray.toHexString("01001101010101".getBytes()),
         1000000L, 1,
         1, 6,
@@ -159,7 +161,10 @@ public class HanzhClient {
   }
 
   private void witnessUpdate() {
-    boolean result = walletApiWrapper.witnessUpdate("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7", "url2");
+    String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+    String url = "url2";
+
+    boolean result = personalWalletApiWrapper.witnessUpdate(from, url);
 
     logger.info("witnessUpdate result:{}", result);
   }
@@ -170,7 +175,7 @@ public class HanzhClient {
     try {
       String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
       String to = "TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf";
-      boolean result = walletApiWrapper.participateAssetIssue(from, to, assetName, 1000);
+      boolean result = personalWalletApiWrapper.participateAssetIssue(from, to, assetName, 1000);
 
       logger.info("participateAssetIssue result:{}", result);
     } catch (Exception exception) {
@@ -180,8 +185,9 @@ public class HanzhClient {
 
   private void accountUpdate() {
     try {
-      boolean result = walletApiWrapper
-          .accountUpdate("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7", "hanzh");
+      String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+      String name = "hanzh";
+      boolean result = personalWalletApiWrapper.accountUpdate(from, name);
 
       logger.info("accountUpdate result:{}", result);
     } catch (Exception exception) {
@@ -192,9 +198,10 @@ public class HanzhClient {
   private void freezeBalance() {
     try {
 
-      boolean result = walletApiWrapper
-          .freezeBalance("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7", 2000 * 1000, 3, 1,
-              "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7");
+      String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+      String to = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+      boolean result = personalWalletApiWrapper.freezeBalance(from, 2000 * 1000, 3,
+          1, to);
 
       logger.info("freezeBalance result:{}", result);
     } catch (Exception exception) {
@@ -207,8 +214,9 @@ public class HanzhClient {
 
     try {
 
-      boolean result = walletApiWrapper.unfreezeBalance("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7", 1,
-          "TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf");
+      String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+      String to = "TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf";
+      boolean result = personalWalletApiWrapper.unfreezeBalance(from, 1, to);
 
       logger.info("unfreezeBalance result:{}", result);
     } catch (Exception exception) {
@@ -219,7 +227,8 @@ public class HanzhClient {
   private void withdrawBalance() {
     try {
 
-      boolean result = walletApiWrapper.withdrawBalance("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7");
+      String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+      boolean result = personalWalletApiWrapper.withdrawBalance(from);
 
       logger.info("withdrawBalance result:{}", result);
     } catch (Exception exception) {
@@ -230,7 +239,8 @@ public class HanzhClient {
   private void unfreezeAsset() {
     try {
 
-      boolean result = walletApiWrapper.unfreezeAsset("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7");
+      String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+      boolean result = personalWalletApiWrapper.unfreezeAsset(from);
 
       logger.info("unfreezeAsset result:{}", result);
     } catch (Exception exception) {
@@ -241,8 +251,9 @@ public class HanzhClient {
   private void updateAsset() {
     try {
 
-      boolean result = walletApiWrapper
-          .updateAsset("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7", "描述", "url3", 1000, 1000);
+      String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+      boolean result = personalWalletApiWrapper.updateAsset(from, "描述", "url3",
+          1000, 1000);
 
       logger.info("updateAsset result:{}", result);
     } catch (Exception exception) {
@@ -256,8 +267,8 @@ public class HanzhClient {
 
       // https://cn.developers.tron.network/docs/super-representatives#tron%E7%BD%91%E7%BB%9C%E5%8F%82%E6%95%B0
 
-      boolean result = walletApiWrapper
-          .proposalCreate("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7", 1L, 8888L);
+      String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+      boolean result = personalWalletApiWrapper.proposalCreate(from, 1L, 8888L);
 
       logger.info("proposalCreate result:{}", result);
     } catch (Exception exception) {
@@ -269,8 +280,8 @@ public class HanzhClient {
 
     try {
 
-      boolean result = walletApiWrapper
-          .proposalApprove("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7", 1L, true);
+      String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+      boolean result = personalWalletApiWrapper.proposalApprove(from, 1L, true);
 
       logger.info("proposalApprove result:{}", result);
     } catch (Exception exception) {
@@ -282,7 +293,8 @@ public class HanzhClient {
 
     try {
 
-      boolean result = walletApiWrapper.proposalDelete("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7", 1L);
+      String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+      boolean result = personalWalletApiWrapper.proposalDelete(from, 1L);
 
       logger.info("proposalDelete result:{}", result);
     } catch (Exception exception) {
@@ -293,8 +305,8 @@ public class HanzhClient {
 
   private void setAccountId() {
     try {
-      boolean result = walletApiWrapper
-          .setAccountId("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7", "21223123123");
+      String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+      boolean result = personalWalletApiWrapper.setAccountId(from, "21223123123");
 
       logger.info("proposalDelete result:{}", result);
     } catch (Exception exception) {

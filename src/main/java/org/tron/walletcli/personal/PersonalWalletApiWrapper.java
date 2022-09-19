@@ -32,7 +32,7 @@ import org.tron.walletserver.GrpcClient;
 import org.tron.walletserver.WalletApi;
 
 @Slf4j
-public class HanzhWalletApiWrapper {
+public class PersonalWalletApiWrapper {
 
   private static final GrpcClient rpcCli = init();
 
@@ -57,7 +57,7 @@ public class HanzhWalletApiWrapper {
     return new GrpcClient(fullNode, solidityNode);
   }
 
-  public HanzhWalletApiWrapper() {
+  public PersonalWalletApiWrapper() {
     WalletApi.init();
   }
 
