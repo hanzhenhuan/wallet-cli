@@ -31,6 +31,9 @@ public class PersonalWalletApiWrapperTest {
   }
 
 
+  /**
+   * AccountCreateContract
+   */
   @Test
   public void createAccount() {
 
@@ -41,6 +44,9 @@ public class PersonalWalletApiWrapperTest {
     logger.info("createAccount result:{}", result);
   }
 
+  /**
+   * TransferContract
+   */
   @Test
   public void sendCoin() {
     String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
@@ -50,6 +56,9 @@ public class PersonalWalletApiWrapperTest {
     logger.info("sendCoin result:{}", result);
   }
 
+  /**
+   * TransferAssetContract
+   */
   @Test
   public void transferAsset() {
     String assetName = "1004964";
@@ -62,6 +71,9 @@ public class PersonalWalletApiWrapperTest {
 
   }
 
+  /**
+   * VoteWitnessContract
+   */
   @Test
   public void voteWitness() {
     String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
@@ -72,6 +84,10 @@ public class PersonalWalletApiWrapperTest {
     logger.info("voteWitness result:{}", result);
   }
 
+
+  /**
+   * WitnessCreateContract
+   */
   @Test
   public void witnessCreate() {
     String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
@@ -81,6 +97,9 @@ public class PersonalWalletApiWrapperTest {
     logger.info("witnessCreate result:{}", result);
   }
 
+  /**
+   * AssetIssueContract
+   */
   @Test
   public void assetIssue() {
     String name = ByteArray.toHexString("test-string".getBytes());
@@ -108,6 +127,9 @@ public class PersonalWalletApiWrapperTest {
     logger.info("createAssetIssue result:{}", assetIssue);
   }
 
+  /**
+   * WitnessUpdateContract (URL)
+   */
   @Test
   public void witnessUpdate() {
     String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
@@ -118,6 +140,9 @@ public class PersonalWalletApiWrapperTest {
     logger.info("witnessUpdate result:{}", result);
   }
 
+  /**
+   * ParticipateAssetIssueContract
+   */
   @Test
   public void participateAssetIssue() {
     String assetName = "1004963";
@@ -134,6 +159,9 @@ public class PersonalWalletApiWrapperTest {
     }
   }
 
+  /**
+   * AccountUpdateContract (name)
+   */
   @Test
   public void accountUpdate() {
     try {
@@ -147,6 +175,9 @@ public class PersonalWalletApiWrapperTest {
     }
   }
 
+  /**
+   * FreezeBalanceContract
+   */
   @Test
   public void freezeBalance() {
     try {
@@ -163,6 +194,10 @@ public class PersonalWalletApiWrapperTest {
 
   }
 
+
+  /**
+   * UnfreezeBalanceContract
+   */
   @Test
   public void unfreezeBalance() {
 
@@ -178,6 +213,9 @@ public class PersonalWalletApiWrapperTest {
     }
   }
 
+  /**
+   * WithdrawBalanceContract
+   */
   @Test
   public void withdrawBalance() {
     try {
@@ -191,6 +229,10 @@ public class PersonalWalletApiWrapperTest {
     }
   }
 
+
+  /**
+   * UnfreezeAssetContract
+   */
   @Test
   public void unfreezeAsset() {
     try {
@@ -204,6 +246,9 @@ public class PersonalWalletApiWrapperTest {
     }
   }
 
+  /**
+   * UpdateAssetContract
+   */
   @Test
   public void updateAsset() {
     try {
@@ -218,6 +263,10 @@ public class PersonalWalletApiWrapperTest {
     }
   }
 
+
+  /**
+   * ProposalCreateContract
+   */
   @Test
   public void proposalCreate() {
     try {
@@ -230,6 +279,9 @@ public class PersonalWalletApiWrapperTest {
     }
   }
 
+  /**
+   * ProposalApproveContract
+   */
   @Test
   public void proposalApprove() {
 
@@ -244,6 +296,9 @@ public class PersonalWalletApiWrapperTest {
     }
   }
 
+  /**
+   * ProposalDeleteContract
+   */
   @Test
   public void proposalDelete() {
 
@@ -259,6 +314,9 @@ public class PersonalWalletApiWrapperTest {
 
   }
 
+  /**
+   * SetAccountIdContract
+   */
   @Test
   public void setAccountId() {
     try {
@@ -271,6 +329,11 @@ public class PersonalWalletApiWrapperTest {
     }
   }
 
+  /**
+   * CreateSmartContract
+   *
+   * @throws IOException
+   */
   @Test
   public void createSmartContract() throws IOException {
     URL resource = PersonalWalletApiWrapperTest.class.getResource("/");
@@ -305,6 +368,9 @@ public class PersonalWalletApiWrapperTest {
     }
   }
 
+  /**
+   * TriggerSmartContract
+   */
   @Test
   public void triggerSmartContract() {
 
@@ -330,6 +396,9 @@ public class PersonalWalletApiWrapperTest {
     }
   }
 
+  /**
+   * UpdateSettingContract
+   */
   @Test
   public void updateSettingContract() {
 
@@ -349,6 +418,9 @@ public class PersonalWalletApiWrapperTest {
     }
   }
 
+  /**
+   * AccountPermissionUpdateContract
+   */
   @Test
   public void accountPermissionUpdate() {
     String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
@@ -410,6 +482,9 @@ public class PersonalWalletApiWrapperTest {
     }
   }
 
+  /**
+   * ClearABIContract
+   */
   @Test
   public void clearAbiContract() {
     String owner = "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o";
@@ -425,6 +500,9 @@ public class PersonalWalletApiWrapperTest {
     }
   }
 
+  /**
+   * UpdateBrokerageContract
+   */
   @Test
   public void updateBrokerageContract() {
     String owner = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
@@ -440,6 +518,9 @@ public class PersonalWalletApiWrapperTest {
     }
   }
 
+  /**
+   * UpdateEnergyLimitContract
+   */
   @Test
   public void updateEnergyLimitContract() {
     String owner = "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o";
