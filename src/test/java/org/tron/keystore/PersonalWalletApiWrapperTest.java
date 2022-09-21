@@ -19,7 +19,7 @@ import org.tron.common.utils.AbiUtil;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
 import org.tron.core.exception.CipherException;
-import org.tron.walletcli.personal.PersonalWalletApiWrapper;
+import org.tron.keystore.personal.PersonalWalletApiWrapper;
 
 /**
  * core protocol https://tronprotocol.github.io/documentation-zh/mechanism-algorithm/system-contracts/

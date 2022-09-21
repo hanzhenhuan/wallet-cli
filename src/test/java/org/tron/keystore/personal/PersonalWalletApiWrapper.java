@@ -1,4 +1,4 @@
-package org.tron.walletcli.personal;
+package org.tron.keystore.personal;
 
 import static org.tron.protos.contract.AssetIssueContractOuterClass.AssetIssueContract;
 import static org.tron.protos.contract.AssetIssueContractOuterClass.ParticipateAssetIssueContract;

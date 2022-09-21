@@ -1,4 +1,4 @@
-package org.tron.walletcli.personal;
+package org.tron.keystore.personal;
 
 import java.io.File;
 import java.io.IOException;
