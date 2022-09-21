@@ -91,7 +91,7 @@ public class PersonalWalletApiWrapperTest {
   }
 
   @Test
-  public void assetIssue() throws CipherException, IOException {
+  public void assetIssue() {
     String name = ByteArray.toHexString("测试字符串".getBytes());
     String abbrName = ByteArray.toHexString("测试".getBytes());
 

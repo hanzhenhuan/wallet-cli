@@ -10,7 +10,6 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.ByteString;
 import com.typesafe.config.Config;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -28,7 +27,6 @@ import org.tron.common.utils.Utils;
 import org.tron.core.config.Configuration;
 import org.tron.core.config.Parameter;
 import org.tron.core.exception.CancelException;
-import org.tron.core.exception.CipherException;
 import org.tron.protos.Protocol;
 import org.tron.protos.Protocol.Key;
 import org.tron.protos.Protocol.Permission;
@@ -142,8 +140,7 @@ public class PersonalWalletApiWrapper {
   /**
    * .TRC-10代币转账
    */
-  public boolean transferAsset(String from, String to, String assetName, long amount)
-      throws CipherException, IOException {
+  public boolean transferAsset(String from, String to, String assetName, long amount) {
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
     byte[] toAddress = WalletApi.decodeFromBase58Check(to);
     byte[] asset = assetName.getBytes();
@@ -215,8 +212,7 @@ public class PersonalWalletApiWrapper {
   }
 
 
-  public boolean participateAssetIssue(String owner, String to, String assetName, long amount)
-      throws CipherException, IOException {
+  public boolean participateAssetIssue(String owner, String to, String assetName, long amount) {
     byte[] fromAddress = WalletApi.decodeFromBase58Check(owner);
     byte[] toAddress = WalletApi.decodeFromBase58Check(to);
     byte[] asset = assetName.getBytes();
@@ -536,11 +532,9 @@ public class PersonalWalletApiWrapper {
    * @return 结果
    */
   public boolean createAssetIssue(String from, String name, String abbrName, Long totalSupply,
-      Integer trxNum,
-      Integer icoNum, Integer precision, Long startTime, Long endTime,
+      Integer trxNum, Integer icoNum, Integer precision, Long startTime, Long endTime,
       Long freeNetLimit, Long publicFreeNetLimit, Integer voteScore,
-      String description, String url, Map<String, String> frozenSupply)
-      throws CipherException, IOException {
+      String description, String url, Map<String, String> frozenSupply) {
 
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
     if (fromAddress == null) {
