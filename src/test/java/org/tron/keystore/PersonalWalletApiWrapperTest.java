@@ -331,8 +331,6 @@ public class PersonalWalletApiWrapperTest {
 
   /**
    * CreateSmartContract
-   *
-   * @throws IOException
    */
   @Test
   public void createSmartContract() throws IOException {
