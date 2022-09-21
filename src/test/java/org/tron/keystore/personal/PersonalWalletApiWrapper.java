@@ -75,12 +75,6 @@ public class PersonalWalletApiWrapper {
   }
 
 
-  /**
-   * 创建账号
-   *
-   * @param owner   合约持有人地址
-   * @param account 将要创建的账户地址
-   */
   public boolean createAccount(String owner, String account) {
 
     byte[] ownerAddress = WalletApi.decodeFromBase58Check(owner);
@@ -103,13 +97,6 @@ public class PersonalWalletApiWrapper {
     return processTransactionExtention(owner, extention);
   }
 
-  /**
-   * 转账TRX
-   *
-   * @param owner  合约持有人地址
-   * @param to     目标账户地址
-   * @param amount 转账金额，单位为 sun
-   */
   public boolean sendCoin(String owner, String to, Long amount) {
     byte[] ownerAddress = WalletApi.decodeFromBase58Check(owner);
     byte[] toAddress = WalletApi.decodeFromBase58Check(to);
@@ -136,10 +123,6 @@ public class PersonalWalletApiWrapper {
     return processTransactionExtention(owner, extention);
   }
 
-
-  /**
-   * .TRC-10代币转账
-   */
   public boolean transferAsset(String from, String to, String assetName, long amount) {
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
     byte[] toAddress = WalletApi.decodeFromBase58Check(to);
@@ -158,9 +141,6 @@ public class PersonalWalletApiWrapper {
   }
 
 
-  /**
-   * 投票超级节点 VoteWitnessContract
-   */
   public boolean voteWitness(String from, String to, long count) {
     byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
     byte[] toAddress = WalletApi.decodeFromBase58Check(to);
@@ -511,26 +491,6 @@ public class PersonalWalletApiWrapper {
   }
 
 
-  /**
-   * 发行TRC10 通证.
-   *
-   * @param from               发行人地址
-   * @param name               通信证名称
-   * @param abbrName           通行证缩写
-   * @param totalSupply        发行总量
-   * @param trxNum             通证和 TRX 的最小单位兑换比 （？）
-   * @param icoNum             ?
-   * @param precision          通证的精度，默认为6, 最小是0，最大是6 (?)
-   * @param startTime          通证发行开始时间
-   * @param endTime            通证发行结束时间
-   * @param freeNetLimit       通证的总免费带宽
-   * @param publicFreeNetLimit 每个通证拥有者能使用的免费带宽数
-   * @param voteScore          (？)
-   * @param description        通行证描述
-   * @param url                通证的官方网站地址
-   * @param frozenSupply       通证发行者发行的时候指定冻结的通证数
-   * @return 结果
-   */
   public boolean createAssetIssue(String from, String name, String abbrName, Long totalSupply,
       Integer trxNum, Integer icoNum, Integer precision, Long startTime, Long endTime,
       Long freeNetLimit, Long publicFreeNetLimit, Integer voteScore,

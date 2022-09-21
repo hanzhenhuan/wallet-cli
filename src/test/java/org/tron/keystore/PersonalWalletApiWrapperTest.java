@@ -92,8 +92,8 @@ public class PersonalWalletApiWrapperTest {
 
   @Test
   public void assetIssue() {
-    String name = ByteArray.toHexString("测试字符串".getBytes());
-    String abbrName = ByteArray.toHexString("测试".getBytes());
+    String name = ByteArray.toHexString("test-string".getBytes());
+    String abbrName = ByteArray.toHexString("test".getBytes());
 
     Date endDate = Utils.strToDateLong("2025-09-16");
     if (endDate == null) {
@@ -107,7 +107,7 @@ public class PersonalWalletApiWrapperTest {
         System.currentTimeMillis() + (1000 * 60),
         endDate.getTime(),
         10000000L, 1000000L, 0,
-        "测试", "测试", new HashMap<String, String>() {
+        "test-desc", "test-url", new HashMap<String, String>() {
           {
             put("1000", "2");
             put("2000", "3");
@@ -218,7 +218,7 @@ public class PersonalWalletApiWrapperTest {
     try {
 
       String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
-      boolean result = personalWalletApiWrapper.updateAsset(from, "描述", "url3",
+      boolean result = personalWalletApiWrapper.updateAsset(from, "desc", "url3",
           1000, 1000);
 
       logger.info("updateAsset result:{}", result);
