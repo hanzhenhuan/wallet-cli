@@ -3,12 +3,13 @@ package org.tron.walletcli.personal;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -17,11 +18,6 @@ import org.tron.common.utils.AbiUtil;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
 import org.tron.core.exception.CipherException;
-
-import java.io.IOException;
-import java.util.HashMap;
-import org.tron.protos.contract.SmartContractOuterClass.TriggerSmartContract;
-import org.tron.walletserver.WalletApi;
 
 /**
  * 核心协议 https://tronprotocol.github.io/documentation-zh/mechanism-algorithm/system-contracts/
@@ -38,7 +34,7 @@ public class PersonalClient {
   public static void main(String[] args) throws CipherException, IOException {
     PersonalClient client = new PersonalClient();
 
-    String function = "participateAssetIssue";
+    String function = "unfreezeBalance";
 
     switch (function) {
       case "createAccount":
@@ -186,8 +182,8 @@ public class PersonalClient {
   }
 
   private void assetIssue() throws CipherException, IOException {
-
-    String name = ByteArray.toHexString("01001101010101".getBytes());
+    String name = ByteArray.toHexString("测试字符串".getBytes());
+    String abbrName = ByteArray.toHexString("测试".getBytes());
 
     Date endDate = Utils.strToDateLong("2025-09-16");
     if (endDate == null) {
@@ -195,11 +191,9 @@ public class PersonalClient {
       return;
     }
     logger.info("assetIssue name:{}", name);
-    String from = "TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf";
+    String from = "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o";
     boolean assetIssue = personalWalletApiWrapper.createAssetIssue(from, name,
-        ByteArray.toHexString("01001101010101".getBytes()),
-        1000000L, 1,
-        1, 6,
+        abbrName, 1000000L, 1, 1, 6,
         System.currentTimeMillis() + (1000 * 60),
         endDate.getTime(),
         10000000L, 1000000L, 0,
@@ -256,9 +250,6 @@ public class PersonalClient {
       String to = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
       boolean result = personalWalletApiWrapper.freezeBalance(from, 50 * 1000 * 1000, 3,
           1, to);
-
-      result = personalWalletApiWrapper.freezeBalance(from, 50 * 1000 * 1000, 3,
-          0, to);
 
       logger.info("freezeBalance result:{}", result);
     } catch (Exception exception) {
@@ -386,21 +377,18 @@ public class PersonalClient {
     String contractName = "PersonalContract2";
     String abiStr = FileUtils.readFileToString(new File(abiPath), "utf-8");
     String codeStr = FileUtils.readFileToString(new File(binPath), "utf-8");
-    String constructorStr = "";
-    String argsStr = "";
+
     long feeLimit = 100 * 1000 * 1000L;
     long consumeUserResourcePercent = 100L;
     long originEnergyLimit = 1000 * 1000L;
     long value = 10;
     long tokenValue = 0;
     String tokenId = "";
-    String libraryAddressPair = null;
-    String compilerVersion = null;
     try {
 
       boolean result = personalWalletApiWrapper.deployContract(from, contractName, abiStr, codeStr,
           feeLimit, value, consumeUserResourcePercent, originEnergyLimit, tokenValue, tokenId,
-          libraryAddressPair, compilerVersion);
+          null, null);
 
       logger.info("deployContract result:{}", result);
     } catch (Exception exception) {
@@ -420,12 +408,11 @@ public class PersonalClient {
     long callValue = 0;
     long tokenValue = 0;
     String tokenId = "";
-    boolean isConstant = false;
 
     try {
 
       boolean result = personalWalletApiWrapper.callContract(from, contractAddress, callValue,
-          input, feeLimit, tokenValue, tokenId, isConstant);
+          input, feeLimit, tokenValue, tokenId, false);
 
       logger.info("callContract result:{}", result);
     } catch (Exception exception) {
@@ -513,9 +500,7 @@ public class PersonalClient {
   public static String getOperations(Integer[] contractId) {
     List<Integer> list = new ArrayList<>(Arrays.asList(contractId));
     byte[] operations = new byte[32];
-    list.forEach(e -> {
-      operations[e / 8] |= (1 << e % 8);
-    });
+    list.forEach(e -> operations[e / 8] |= (1 << e % 8));
     return ByteArray.toHexString(operations);
   }
 

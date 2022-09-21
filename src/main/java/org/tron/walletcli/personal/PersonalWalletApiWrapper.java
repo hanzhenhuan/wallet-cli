@@ -11,20 +11,15 @@ import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.ByteString;
 import com.typesafe.config.Config;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.util.encoders.Hex;
 import org.tron.api.GrpcAPI;
 import org.tron.api.GrpcAPI.TransactionExtention;
 import org.tron.common.crypto.ECKey;
-import org.tron.common.crypto.Hash;
 import org.tron.common.crypto.Sha256Sm3Hash;
 import org.tron.common.utils.Base58;
 import org.tron.common.utils.ByteArray;
@@ -32,18 +27,19 @@ import org.tron.common.utils.TransactionUtils;
 import org.tron.common.utils.Utils;
 import org.tron.core.config.Configuration;
 import org.tron.core.config.Parameter;
+import org.tron.core.exception.CancelException;
 import org.tron.core.exception.CipherException;
 import org.tron.protos.Protocol;
 import org.tron.protos.Protocol.Key;
 import org.tron.protos.Protocol.Permission;
 import org.tron.protos.Protocol.Transaction;
 import org.tron.protos.Protocol.Transaction.Result;
+import org.tron.protos.Protocol.TransactionSign;
 import org.tron.protos.contract.AccountContract;
 import org.tron.protos.contract.AccountContract.AccountPermissionUpdateContract;
 import org.tron.protos.contract.BalanceContract;
 import org.tron.protos.contract.ProposalContract;
 import org.tron.protos.contract.SmartContractOuterClass.CreateSmartContract;
-import org.tron.protos.contract.SmartContractOuterClass.SmartContract;
 import org.tron.protos.contract.SmartContractOuterClass.TriggerSmartContract;
 import org.tron.protos.contract.SmartContractOuterClass.UpdateSettingContract;
 import org.tron.protos.contract.WitnessContract;
@@ -629,7 +625,7 @@ public class PersonalWalletApiWrapper {
       if (address.equals("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7")) {
         byte[] pk1 = ECKeyLoader.getPrivateKey("TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o");
         byte[] pk2 = ECKeyLoader.getPrivateKey("TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf");
-        TransactionExtention ext = WalletApi.addSignByApi(transaction, pk1);
+        TransactionExtention ext = addSignByApi(transaction, pk1, 0);
         ext = WalletApi.addSignByApi(ext.getTransaction(), pk2);
         transaction = ext.getTransaction();
       } else {
@@ -797,55 +793,6 @@ public class PersonalWalletApiWrapper {
     return processTransactionExtention(from, extention);
   }
 
-
-  public static byte[] replaceLibraryAddress(String code, String libraryAddressPair,
-      String compilerVersion) {
-
-    String[] libraryAddressList = libraryAddressPair.split("[,]");
-
-    for (int i = 0; i < libraryAddressList.length; i++) {
-      String cur = libraryAddressList[i];
-
-      int lastPosition = cur.lastIndexOf(":");
-      if (-1 == lastPosition) {
-        throw new RuntimeException("libraryAddress delimit by ':'");
-      }
-      String libraryName = cur.substring(0, lastPosition);
-      String addr = cur.substring(lastPosition + 1);
-      String libraryAddressHex;
-      try {
-        libraryAddressHex = (new String(Hex.encode(WalletApi.decodeFromBase58Check(addr)),
-            "US-ASCII")).substring(2);
-      } catch (UnsupportedEncodingException e) {
-        throw new RuntimeException(e); // now ignore
-      }
-
-      String beReplaced;
-      if (compilerVersion == null) {
-        // old version
-        String repeated = new String(
-            new char[40 - libraryName.length() - 2])
-            .replace("\0", "_");
-        beReplaced = "__" + libraryName + repeated;
-      } else if (compilerVersion.equalsIgnoreCase("v5")) {
-        // 0.5.4 version
-        String libraryNameKeccak256 =
-            ByteArray.toHexString(
-                Hash.sha3(ByteArray.fromString(libraryName)))
-                .substring(0, 34);
-        beReplaced = "__\\$" + libraryNameKeccak256 + "\\$__";
-      } else {
-        throw new RuntimeException("unknown compiler version.");
-      }
-
-      Matcher m = Pattern.compile(beReplaced).matcher(code);
-      code = m.replaceAll(libraryAddressHex);
-    }
-
-    return Hex.decode(code);
-  }
-
-
   private static Permission json2Permission(JSONObject json) {
     Permission.Builder permissionBuilder = Permission.newBuilder();
     if (json.containsKey("type")) {
@@ -876,7 +823,11 @@ public class PersonalWalletApiWrapper {
         JSONObject key = keys.getJSONObject(i);
         String address = key.getString("address");
         long weight = key.getLong("weight");
-        keyBuilder.setAddress(ByteString.copyFrom(decode58Check(address)));
+        byte[] addressBytes = decode58Check(address);
+        if (addressBytes == null) {
+          throw new RuntimeException("decode58Check from address failed");
+        }
+        keyBuilder.setAddress(ByteString.copyFrom(addressBytes));
         keyBuilder.setWeight(weight);
         keyList.add(keyBuilder.build());
       }
@@ -933,4 +884,40 @@ public class PersonalWalletApiWrapper {
     return builder.build();
   }
 
+
+  public static TransactionExtention addSignByApi(Transaction transaction, byte[] privateKey,
+      int permissionId) throws CancelException {
+
+    transaction = TransactionUtils.setExpirationTime(transaction);
+    String tipsString = "Please input permission id.";
+    transaction = setPermissionId(transaction, tipsString, permissionId);
+    TransactionSign.Builder builder = TransactionSign.newBuilder();
+    builder.setPrivateKey(ByteString.copyFrom(privateKey));
+    builder.setTransaction(transaction);
+    return rpcCli.addSign(builder.build());
+  }
+
+
+  public static Transaction setPermissionId(Transaction transaction, String tipString,
+      int permissionId) throws CancelException {
+
+    if (transaction.getSignatureCount() != 0
+        || transaction.getRawData().getContract(0).getPermissionId() != 0) {
+      return transaction;
+    }
+
+    System.out.println(tipString);
+    if (permissionId < 0) {
+      throw new CancelException("User cancelled");
+    }
+    if (permissionId != 0) {
+      Transaction.raw.Builder raw = transaction.getRawData().toBuilder();
+      Transaction.Contract.Builder contract =
+          raw.getContract(0).toBuilder().setPermissionId(permissionId);
+      raw.clearContract();
+      raw.addContract(contract);
+      transaction = transaction.toBuilder().setRawData(raw).build();
+    }
+    return transaction;
+  }
 }
