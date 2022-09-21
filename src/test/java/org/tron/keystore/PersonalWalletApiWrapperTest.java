@@ -17,7 +17,6 @@ import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
 import org.tron.keystore.personal.ContractUtils;
 import org.tron.keystore.personal.PersonalWalletApiWrapper;
-import org.tron.protos.contract.AccountContract.AccountPermissionUpdateContract;
 
 /**
  * core protocol https://tronprotocol.github.io/documentation-zh/mechanism-algorithm/system-contracts/
@@ -322,7 +321,7 @@ public class PersonalWalletApiWrapperTest {
 
     try {
 
-      boolean result = personalWalletApiWrapper.callContract(from, contractAddress, callValue,
+      boolean result = personalWalletApiWrapper.triggerContract(from, contractAddress, callValue,
           input, feeLimit, tokenValue, tokenId, false);
 
       logger.info("callContract result:{}", result);
