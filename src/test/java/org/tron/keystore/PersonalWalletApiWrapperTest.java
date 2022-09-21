@@ -504,6 +504,7 @@ public class PersonalWalletApiWrapperTest {
   @Test
   public void updateBrokerageContract() {
     String owner = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+    // brokerage represent left reward for owner
     int brokerage = 30;
 
     try {
