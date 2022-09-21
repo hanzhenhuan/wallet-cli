@@ -18,7 +18,6 @@ import org.junit.Test;
 import org.tron.common.utils.AbiUtil;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
-import org.tron.core.exception.CipherException;
 import org.tron.keystore.personal.PersonalWalletApiWrapper;
 
 /**
@@ -54,7 +53,7 @@ public class PersonalWalletApiWrapperTest {
   }
 
   @Test
-  public void transferAsset() throws CipherException, IOException {
+  public void transferAsset() {
     String assetName = "1004964";//ByteArray.toHexString("01001101010101".getBytes());
 
     String from = "TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf";
