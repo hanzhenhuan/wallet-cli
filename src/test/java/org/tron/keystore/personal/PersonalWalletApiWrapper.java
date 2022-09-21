@@ -37,9 +37,12 @@ import org.tron.protos.contract.AccountContract;
 import org.tron.protos.contract.AccountContract.AccountPermissionUpdateContract;
 import org.tron.protos.contract.BalanceContract;
 import org.tron.protos.contract.ProposalContract;
+import org.tron.protos.contract.SmartContractOuterClass.ClearABIContract;
 import org.tron.protos.contract.SmartContractOuterClass.CreateSmartContract;
 import org.tron.protos.contract.SmartContractOuterClass.TriggerSmartContract;
+import org.tron.protos.contract.SmartContractOuterClass.UpdateEnergyLimitContract;
 import org.tron.protos.contract.SmartContractOuterClass.UpdateSettingContract;
+import org.tron.protos.contract.StorageContract.UpdateBrokerageContract;
 import org.tron.protos.contract.WitnessContract;
 import org.tron.walletserver.GrpcClient;
 import org.tron.walletserver.WalletApi;
@@ -747,6 +750,74 @@ public class PersonalWalletApiWrapper {
     return processTransactionExtention(from, extention);
   }
 
+  public boolean clearAbiContract(String from, String contract) {
+
+    byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
+    byte[] contractAddress = WalletApi.decodeFromBase58Check(contract);
+    if (fromAddress == null || contractAddress == null) {
+      logger.info("deployContract param illegal ");
+      return false;
+    }
+
+    ClearABIContract.Builder builder = ClearABIContract.newBuilder();
+    builder.setOwnerAddress(ByteString.copyFrom(fromAddress));
+    builder.setContractAddress(ByteString.copyFrom(contractAddress));
+
+    TransactionExtention extention = rpcCli.clearContractABI(builder.build());
+
+    if (extention == null || !extention.getResult().getResult()) {
+      logger.info("clearContractABI extention:{}", extention);
+      return false;
+    }
+
+    return processTransactionExtention(from, extention);
+  }
+
+  public boolean updateBrokerageContract(String owner, int brokerage) {
+    byte[] fromAddress = WalletApi.decodeFromBase58Check(owner);
+    if (fromAddress == null) {
+      logger.info("deployContract param illegal ");
+      return false;
+    }
+
+    UpdateBrokerageContract.Builder builder = UpdateBrokerageContract.newBuilder();
+    builder.setOwnerAddress(ByteString.copyFrom(fromAddress));
+    builder.setBrokerage(brokerage);
+
+    TransactionExtention extention = rpcCli.updateBrokerage(builder.build());
+
+    if (extention == null || !extention.getResult().getResult()) {
+      logger.info("updateBrokerageContract extention:{}", extention);
+      return false;
+    }
+
+    return processTransactionExtention(owner, extention);
+  }
+
+  public boolean updateEnergyLimitContract(String owner, String contract, long originEnergyLimit) {
+    byte[] fromAddress = WalletApi.decodeFromBase58Check(owner);
+    byte[] contractAddress = WalletApi.decodeFromBase58Check(contract);
+    if (fromAddress == null || contractAddress == null) {
+      logger.info("deployContract param illegal ");
+      return false;
+    }
+
+    UpdateEnergyLimitContract.Builder builder = UpdateEnergyLimitContract.newBuilder();
+    builder.setOwnerAddress(ByteString.copyFrom(fromAddress));
+    builder.setContractAddress(ByteString.copyFrom(contractAddress));
+    builder.setOriginEnergyLimit(originEnergyLimit);
+
+    TransactionExtention extention = rpcCli.updateEnergyLimit(builder.build());
+
+    if (extention == null || !extention.getResult().getResult()) {
+      logger.info("updateEnergyLimitContract extention:{}", extention);
+      return false;
+    }
+
+    return processTransactionExtention(owner, extention);
+  }
+
+
   private static Permission json2Permission(JSONObject json) {
     Permission.Builder permissionBuilder = Permission.newBuilder();
     if (json.containsKey("type")) {
@@ -874,4 +945,7 @@ public class PersonalWalletApiWrapper {
     }
     return transaction;
   }
+
+
+
 }

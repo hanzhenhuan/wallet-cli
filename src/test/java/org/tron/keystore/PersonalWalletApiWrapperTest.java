@@ -6,11 +6,8 @@ import com.google.gson.JsonObject;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.util.encoders.Hex;
@@ -18,7 +15,9 @@ import org.junit.Test;
 import org.tron.common.utils.AbiUtil;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
+import org.tron.keystore.personal.ContractUtils;
 import org.tron.keystore.personal.PersonalWalletApiWrapper;
+import org.tron.protos.contract.AccountContract.AccountPermissionUpdateContract;
 
 /**
  * core protocol https://tronprotocol.github.io/documentation-zh/mechanism-algorithm/system-contracts/
@@ -54,7 +53,7 @@ public class PersonalWalletApiWrapperTest {
 
   @Test
   public void transferAsset() {
-    String assetName = "1004964";//ByteArray.toHexString("01001101010101".getBytes());
+    String assetName = "1004964";
 
     String from = "TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf";
     String to = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
@@ -66,12 +65,6 @@ public class PersonalWalletApiWrapperTest {
 
   @Test
   public void voteWitness() {
-    //Optional<GrpcAPI.ProposalList> proposalList = HanzhWalletApiWrapper.listProposals();
-
-    //ByteString proposerAddress = proposalList.get().getProposals(0).getProposerAddress();
-
-    //WalletApi.encode58Check(proposerAddress)
-
     String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
     String to = "TPffmvjxEcvZefQqS7QYvL1Der3uiguikE";
 
@@ -104,8 +97,7 @@ public class PersonalWalletApiWrapperTest {
     boolean assetIssue = personalWalletApiWrapper.createAssetIssue(from, name,
         abbrName, 1000000L, 1, 1, 6,
         System.currentTimeMillis() + (1000 * 60),
-        endDate.getTime(),
-        10000000L, 1000000L, 0,
+        endDate.getTime(), 10000000L, 1000000L, 0,
         "test-desc", "test-url", new HashMap<String, String>() {
           {
             put("1000", "2");
@@ -134,7 +126,8 @@ public class PersonalWalletApiWrapperTest {
     try {
       String from = "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o";
       String to = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
-      boolean result = personalWalletApiWrapper.participateAssetIssue(from, to, assetName, 1000);
+      boolean result = personalWalletApiWrapper.participateAssetIssue(from, to, assetName,
+          1000);
 
       logger.info("participateAssetIssue result:{}", result);
     } catch (Exception exception) {
@@ -161,8 +154,8 @@ public class PersonalWalletApiWrapperTest {
 
       String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
       String to = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
-      boolean result = personalWalletApiWrapper.freezeBalance(from, 50 * 1000 * 1000, 3,
-          1, to);
+      boolean result = personalWalletApiWrapper.freezeBalance(from, 50 * 1000 * 1000,
+          3, 1, to);
 
       logger.info("freezeBalance result:{}", result);
     } catch (Exception exception) {
@@ -229,9 +222,6 @@ public class PersonalWalletApiWrapperTest {
   @Test
   public void proposalCreate() {
     try {
-
-      // https://cn.developers.tron.network/docs/super-representatives#tron%E7%BD%91%E7%BB%9C%E5%8F%82%E6%95%B0
-
       String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
       boolean result = personalWalletApiWrapper.proposalCreate(from, 1L, 8888L);
 
@@ -393,7 +383,8 @@ public class PersonalWalletApiWrapperTest {
     witness.addProperty("permission_name", "witness");
     witness.add("keys", witnessKeys);
 
-    String operations = getOperations(new Integer[]{0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12});
+    Integer[] contractIds = {0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12};
+    String operations = ContractUtils.getOperations(contractIds);
 
     JsonObject active = new Gson().fromJson(owner.toString(), JsonObject.class);
     active.addProperty("type", 2);
@@ -420,11 +411,51 @@ public class PersonalWalletApiWrapperTest {
     }
   }
 
-  public static String getOperations(Integer[] contractId) {
-    List<Integer> list = new ArrayList<>(Arrays.asList(contractId));
-    byte[] operations = new byte[32];
-    list.forEach(e -> operations[e / 8] |= (1 << e % 8));
-    return ByteArray.toHexString(operations);
+  @Test
+  public void clearAbiContract() {
+    String owner = "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o";
+    String contract = "TYRxYxQwAcbBiJhrXEV3gxh6Qeby2u7wNn";
+
+    try {
+
+      boolean result = personalWalletApiWrapper.clearAbiContract(owner, contract);
+
+      logger.info("clearAbiContract result:{}", result);
+    } catch (Exception exception) {
+      logger.error(exception.getMessage());
+    }
+  }
+
+  @Test
+  public void updateBrokerageContract() {
+    String owner = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+    int brokerage = 30;
+
+    try {
+
+      boolean result = personalWalletApiWrapper.updateBrokerageContract(owner, brokerage);
+
+      logger.info("clearAbiContract result:{}", result);
+    } catch (Exception exception) {
+      logger.error(exception.getMessage());
+    }
+  }
+
+  @Test
+  public void updateEnergyLimitContract() {
+    String owner = "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o";
+    String contract = "TYRxYxQwAcbBiJhrXEV3gxh6Qeby2u7wNn";
+    long originEnergyLimit = 1000 * 1000 * 400;
+
+    try {
+
+      boolean result = personalWalletApiWrapper.updateEnergyLimitContract(owner, contract,
+          originEnergyLimit);
+
+      logger.info("clearAbiContract result:{}", result);
+    } catch (Exception exception) {
+      logger.error(exception.getMessage());
+    }
   }
 
 
