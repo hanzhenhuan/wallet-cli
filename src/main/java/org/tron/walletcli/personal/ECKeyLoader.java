@@ -13,6 +13,7 @@ public class ECKeyLoader {
 
 
   public static Map<String, ECKey> address2ECKeyMap = new HashMap<>();
+  public static Map<String, byte[]> address2PrivateKeyMap = new HashMap<String, byte[]>();
 
   static {
 
@@ -25,6 +26,7 @@ public class ECKeyLoader {
         byte[] db = ByteArray.fromHexString(pair[1]);
 
         address2ECKeyMap.put(pair[0], new ECKey(db, true));
+        address2PrivateKeyMap.put(pair[0], db);
       }
 
 
@@ -37,6 +39,13 @@ public class ECKeyLoader {
 
   public static ECKey getECKeyByAddress(String address) {
     ECKey privateKey = address2ECKeyMap.get(address);
+    if (privateKey == null) {
+      throw new RuntimeException("不支持的address");
+    }
+    return privateKey;
+  }
+  public static byte[] getPrivateKey(String address) {
+    byte[] privateKey = address2PrivateKeyMap.get(address);
     if (privateKey == null) {
       throw new RuntimeException("不支持的address");
     }

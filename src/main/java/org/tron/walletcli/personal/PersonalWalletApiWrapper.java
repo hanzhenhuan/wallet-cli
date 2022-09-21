@@ -6,16 +6,27 @@ import static org.tron.protos.contract.AssetIssueContractOuterClass.TransferAsse
 import static org.tron.protos.contract.AssetIssueContractOuterClass.UnfreezeAssetContract;
 import static org.tron.protos.contract.AssetIssueContractOuterClass.UpdateAssetContract;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.google.protobuf.ByteString;
 import com.typesafe.config.Config;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.util.encoders.Hex;
 import org.tron.api.GrpcAPI;
+import org.tron.api.GrpcAPI.TransactionExtention;
 import org.tron.common.crypto.ECKey;
+import org.tron.common.crypto.Hash;
 import org.tron.common.crypto.Sha256Sm3Hash;
+import org.tron.common.utils.Base58;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.TransactionUtils;
 import org.tron.common.utils.Utils;
@@ -23,10 +34,18 @@ import org.tron.core.config.Configuration;
 import org.tron.core.config.Parameter;
 import org.tron.core.exception.CipherException;
 import org.tron.protos.Protocol;
+import org.tron.protos.Protocol.Key;
+import org.tron.protos.Protocol.Permission;
 import org.tron.protos.Protocol.Transaction;
+import org.tron.protos.Protocol.Transaction.Result;
 import org.tron.protos.contract.AccountContract;
+import org.tron.protos.contract.AccountContract.AccountPermissionUpdateContract;
 import org.tron.protos.contract.BalanceContract;
 import org.tron.protos.contract.ProposalContract;
+import org.tron.protos.contract.SmartContractOuterClass.CreateSmartContract;
+import org.tron.protos.contract.SmartContractOuterClass.SmartContract;
+import org.tron.protos.contract.SmartContractOuterClass.TriggerSmartContract;
+import org.tron.protos.contract.SmartContractOuterClass.UpdateSettingContract;
 import org.tron.protos.contract.WitnessContract;
 import org.tron.walletserver.GrpcClient;
 import org.tron.walletserver.WalletApi;
@@ -200,9 +219,9 @@ public class PersonalWalletApiWrapper {
   }
 
 
-  public boolean participateAssetIssue(String from, String to, String assetName, long amount)
+  public boolean participateAssetIssue(String owner, String to, String assetName, long amount)
       throws CipherException, IOException {
-    byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
+    byte[] fromAddress = WalletApi.decodeFromBase58Check(owner);
     byte[] toAddress = WalletApi.decodeFromBase58Check(to);
     byte[] asset = assetName.getBytes();
 
@@ -216,7 +235,7 @@ public class PersonalWalletApiWrapper {
       logger.info("participateAssetIssue extention:{}", extention);
       return false;
     }
-    return processTransactionExtention(from, extention);
+    return processTransactionExtention(owner, extention);
   }
 
   public boolean accountUpdate(String from, String accountName) {
@@ -607,7 +626,15 @@ public class PersonalWalletApiWrapper {
     }
 
     try {
-      transaction = signTransaction(address, transaction);
+      if (address.equals("TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7")) {
+        byte[] pk1 = ECKeyLoader.getPrivateKey("TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o");
+        byte[] pk2 = ECKeyLoader.getPrivateKey("TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf");
+        TransactionExtention ext = WalletApi.addSignByApi(transaction, pk1);
+        ext = WalletApi.addSignByApi(ext.getTransaction(), pk2);
+        transaction = ext.getTransaction();
+      } else {
+        transaction = signTransaction(address, transaction);
+      }
     } catch (Exception exception) {
       throw new RuntimeException("signTransaction failed");
     }
@@ -650,5 +677,260 @@ public class PersonalWalletApiWrapper {
     return ByteArray.toHexString(Sha256Sm3Hash.hash(transaction.getRawData().toByteArray()));
   }
 
+
+  public boolean deployContract(String from, String contractName, String abiStr, String codeStr,
+      long feeLimit, long value, long consumeUserResourcePercent, long originEnergyLimit,
+      long tokenValue, String tokenId, String libraryAddressPair, String compilerVersion) {
+
+    byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
+    if (fromAddress == null) {
+      logger.info("deployContract param illegal ");
+      return false;
+    }
+
+    CreateSmartContract contract = WalletApi.createContractDeployContract(contractName, fromAddress,
+        abiStr, codeStr, value, consumeUserResourcePercent, originEnergyLimit, tokenValue, tokenId,
+        libraryAddressPair, compilerVersion);
+
+    TransactionExtention extention = rpcCli.deployContract(contract);
+    if (extention == null || !extention.getResult().getResult()) {
+      logger.info("proposalDelete extention:{}", extention);
+      return false;
+    }
+
+    extention = supplyTransactionLimit(extention, feeLimit);
+
+    return processTransactionExtention(from, extention);
+  }
+
+  private TransactionExtention supplyTransactionLimit(TransactionExtention tnxExt, long feeLimit) {
+
+    TransactionExtention.Builder texBuilder = TransactionExtention.newBuilder();
+    Transaction.Builder transBuilder = Transaction.newBuilder();
+    Transaction.raw.Builder rawBuilder = tnxExt.getTransaction().getRawData()
+        .toBuilder();
+    rawBuilder.setFeeLimit(feeLimit);
+    transBuilder.setRawData(rawBuilder);
+    for (int i = 0; i < tnxExt.getTransaction().getSignatureCount(); i++) {
+      ByteString s = tnxExt.getTransaction().getSignature(i);
+      transBuilder.setSignature(i, s);
+    }
+    for (int i = 0; i < tnxExt.getTransaction().getRetCount(); i++) {
+      Result r = tnxExt.getTransaction().getRet(i);
+      transBuilder.setRet(i, r);
+    }
+    texBuilder.setTransaction(transBuilder);
+    texBuilder.setResult(tnxExt.getResult());
+    texBuilder.setTxid(tnxExt.getTxid());
+    return texBuilder.build();
+  }
+
+  public boolean callContract(String from, String contract, long callValue, byte[] input,
+      long feeLimit, long tokenValue, String tokenId, boolean isConstant) {
+
+    byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
+    byte[] contractAddress = WalletApi.decodeFromBase58Check(contract);
+    if (fromAddress == null || contractAddress == null) {
+      logger.info("deployContract param illegal ");
+      return false;
+    }
+
+    TriggerSmartContract triggerContract = WalletApi.triggerCallContract(fromAddress,
+        contractAddress, callValue, input, tokenValue, tokenId);
+
+    TransactionExtention extention;
+    if (isConstant) {
+      extention = rpcCli.triggerConstantContract(triggerContract);
+    } else {
+      extention = rpcCli.triggerContract(triggerContract);
+    }
+
+    if (extention == null || !extention.getResult().getResult()) {
+      logger.info("proposalDelete extention:{}", extention);
+      return false;
+    }
+
+    extention = supplyTransactionLimit(extention, feeLimit);
+
+    return processTransactionExtention(from, extention);
+  }
+
+  public boolean updateSettingContract(String from, String contract,
+      long consumeUserResourcePercent) {
+    byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
+    byte[] contractAddress = WalletApi.decodeFromBase58Check(contract);
+    if (fromAddress == null || contractAddress == null) {
+      logger.info("deployContract param illegal ");
+      return false;
+    }
+    UpdateSettingContract updateSettingContract = WalletApi.createUpdateSettingContract(
+        fromAddress, contractAddress, consumeUserResourcePercent);
+
+    TransactionExtention extention = rpcCli.updateSetting(updateSettingContract);
+
+    if (extention == null || !extention.getResult().getResult()) {
+      logger.info("updateSettingContract extention:{}", extention);
+      return false;
+    }
+
+    return processTransactionExtention(from, extention);
+  }
+
+  public boolean accountPermissionUpdate(String from, String permissionJson) {
+
+    byte[] fromAddress = WalletApi.decodeFromBase58Check(from);
+    if (fromAddress == null) {
+      logger.info("deployContract param illegal ");
+      return false;
+    }
+
+    AccountPermissionUpdateContract accountPermissionContract = createAccountPermissionContract(
+        fromAddress, permissionJson);
+
+    TransactionExtention extention = rpcCli.accountPermissionUpdate(accountPermissionContract);
+
+    if (extention == null || !extention.getResult().getResult()) {
+      logger.info("accountPermissionUpdate extention:{}", extention);
+      return false;
+    }
+
+    return processTransactionExtention(from, extention);
+  }
+
+
+  public static byte[] replaceLibraryAddress(String code, String libraryAddressPair,
+      String compilerVersion) {
+
+    String[] libraryAddressList = libraryAddressPair.split("[,]");
+
+    for (int i = 0; i < libraryAddressList.length; i++) {
+      String cur = libraryAddressList[i];
+
+      int lastPosition = cur.lastIndexOf(":");
+      if (-1 == lastPosition) {
+        throw new RuntimeException("libraryAddress delimit by ':'");
+      }
+      String libraryName = cur.substring(0, lastPosition);
+      String addr = cur.substring(lastPosition + 1);
+      String libraryAddressHex;
+      try {
+        libraryAddressHex = (new String(Hex.encode(WalletApi.decodeFromBase58Check(addr)),
+            "US-ASCII")).substring(2);
+      } catch (UnsupportedEncodingException e) {
+        throw new RuntimeException(e); // now ignore
+      }
+
+      String beReplaced;
+      if (compilerVersion == null) {
+        // old version
+        String repeated = new String(
+            new char[40 - libraryName.length() - 2])
+            .replace("\0", "_");
+        beReplaced = "__" + libraryName + repeated;
+      } else if (compilerVersion.equalsIgnoreCase("v5")) {
+        // 0.5.4 version
+        String libraryNameKeccak256 =
+            ByteArray.toHexString(
+                Hash.sha3(ByteArray.fromString(libraryName)))
+                .substring(0, 34);
+        beReplaced = "__\\$" + libraryNameKeccak256 + "\\$__";
+      } else {
+        throw new RuntimeException("unknown compiler version.");
+      }
+
+      Matcher m = Pattern.compile(beReplaced).matcher(code);
+      code = m.replaceAll(libraryAddressHex);
+    }
+
+    return Hex.decode(code);
+  }
+
+
+  private static Permission json2Permission(JSONObject json) {
+    Permission.Builder permissionBuilder = Permission.newBuilder();
+    if (json.containsKey("type")) {
+      int type = json.getInteger("type");
+      permissionBuilder.setTypeValue(type);
+    }
+    if (json.containsKey("permission_name")) {
+      String permission_name = json.getString("permission_name");
+      permissionBuilder.setPermissionName(permission_name);
+    }
+    if (json.containsKey("threshold")) {
+      long threshold = json.getLong("threshold");
+      permissionBuilder.setThreshold(threshold);
+    }
+    if (json.containsKey("parent_id")) {
+      int parent_id = json.getInteger("parent_id");
+      permissionBuilder.setParentId(parent_id);
+    }
+    if (json.containsKey("operations")) {
+      byte[] operations = ByteArray.fromHexString(json.getString("operations"));
+      permissionBuilder.setOperations(ByteString.copyFrom(operations));
+    }
+    if (json.containsKey("keys")) {
+      JSONArray keys = json.getJSONArray("keys");
+      List<Key> keyList = new ArrayList<>();
+      for (int i = 0; i < keys.size(); i++) {
+        Key.Builder keyBuilder = Key.newBuilder();
+        JSONObject key = keys.getJSONObject(i);
+        String address = key.getString("address");
+        long weight = key.getLong("weight");
+        keyBuilder.setAddress(ByteString.copyFrom(decode58Check(address)));
+        keyBuilder.setWeight(weight);
+        keyList.add(keyBuilder.build());
+      }
+      permissionBuilder.addAllKeys(keyList);
+    }
+    return permissionBuilder.build();
+  }
+
+
+  public static byte[] decode58Check(String input) {
+    byte[] decodeCheck = Base58.decode(input);
+    if (decodeCheck.length <= 4) {
+      return null;
+    }
+    byte[] decodeData = new byte[decodeCheck.length - 4];
+    System.arraycopy(decodeCheck, 0, decodeData, 0, decodeData.length);
+    byte[] hash0 = Sha256Sm3Hash.hash(decodeData);
+    byte[] hash1 = Sha256Sm3Hash.hash(hash0);
+    if (hash1[0] == decodeCheck[decodeData.length]
+        && hash1[1] == decodeCheck[decodeData.length + 1]
+        && hash1[2] == decodeCheck[decodeData.length + 2]
+        && hash1[3] == decodeCheck[decodeData.length + 3]) {
+      return decodeData;
+    }
+    return null;
+  }
+
+  public static AccountPermissionUpdateContract createAccountPermissionContract(byte[] owner,
+      String permissionJson) {
+    AccountPermissionUpdateContract.Builder builder = AccountPermissionUpdateContract.newBuilder();
+
+    JSONObject permissions = JSONObject.parseObject(permissionJson);
+    JSONObject owner_permission = permissions.getJSONObject("owner_permission");
+    JSONObject witness_permission = permissions.getJSONObject("witness_permission");
+    JSONArray active_permissions = permissions.getJSONArray("active_permissions");
+
+    if (owner_permission != null) {
+      Permission ownerPermission = json2Permission(owner_permission);
+      builder.setOwner(ownerPermission);
+    }
+    if (witness_permission != null) {
+      Permission witnessPermission = json2Permission(witness_permission);
+      builder.setWitness(witnessPermission);
+    }
+    if (active_permissions != null) {
+      List<Permission> activePermissionList = new ArrayList<>();
+      for (int j = 0; j < active_permissions.size(); j++) {
+        JSONObject permission = active_permissions.getJSONObject(j);
+        activePermissionList.add(json2Permission(permission));
+      }
+      builder.addAllActives(activePermissionList);
+    }
+    builder.setOwnerAddress(ByteString.copyFrom(owner));
+    return builder.build();
+  }
 
 }

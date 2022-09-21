@@ -1,13 +1,27 @@
 package org.tron.walletcli.personal;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.io.File;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
+import org.bouncycastle.util.encoders.Hex;
+import org.tron.common.utils.AbiUtil;
 import org.tron.common.utils.ByteArray;
 import org.tron.common.utils.Utils;
 import org.tron.core.exception.CipherException;
 
 import java.io.IOException;
 import java.util.HashMap;
+import org.tron.protos.contract.SmartContractOuterClass.TriggerSmartContract;
+import org.tron.walletserver.WalletApi;
 
 /**
  * 核心协议 https://tronprotocol.github.io/documentation-zh/mechanism-algorithm/system-contracts/
@@ -24,7 +38,8 @@ public class PersonalClient {
   public static void main(String[] args) throws CipherException, IOException {
     PersonalClient client = new PersonalClient();
 
-    String function = "sendCoin";
+    String function = "participateAssetIssue";
+
     switch (function) {
       case "createAccount":
         // 1.创建账户 AccountCreateContract（支付了手续费）
@@ -95,11 +110,27 @@ public class PersonalClient {
         client.proposalDelete();
         break;
       case "setAccountId":
-        // 18.设置账户ID SetAccountIdContract¶
+        // 18.设置账户ID SetAccountIdContract
         client.setAccountId();
+        break;
+      case "createSmartContract":
+        // 19.创建智能合约 CreateSmartContract
+        client.createSmartContract();
+        break;
+      case "triggerSmartContract":
+        // 20.触发智能合约 TriggerSmartContract
+        client.triggerSmartContract();
+        break;
+      case "updateSettingContract":
+        // 21.更新合约 UpdateSettingContract
+        client.updateSettingContract();
+        break;
+      case "accountPermissionUpdate":
+        client.accountPermissionUpdate();
         break;
     }
   }
+
 
   private void createAccount() {
 
@@ -112,9 +143,9 @@ public class PersonalClient {
 
 
   public void sendCoin() {
-    String from = "TYUMr6QQRFWy3bybuBRT2VV6rtUTkMNnKo";
+    String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
     String to = "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o";
-    boolean result = personalWalletApiWrapper.sendCoin(from, to, 1000 * 1000 * 500L);
+    boolean result = personalWalletApiWrapper.sendCoin(from, to, 1000 * 1000 * 20L);
 
     logger.info("sendCoin result:{}", result);
   }
@@ -193,11 +224,11 @@ public class PersonalClient {
   }
 
   private void participateAssetIssue() {
-    String assetName = "1004964";
+    String assetName = "1004963";
 
     try {
-      String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
-      String to = "TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf";
+      String from = "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o";
+      String to = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
       boolean result = personalWalletApiWrapper.participateAssetIssue(from, to, assetName, 1000);
 
       logger.info("participateAssetIssue result:{}", result);
@@ -223,8 +254,11 @@ public class PersonalClient {
 
       String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
       String to = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
-      boolean result = personalWalletApiWrapper.freezeBalance(from, 2000 * 1000, 3,
+      boolean result = personalWalletApiWrapper.freezeBalance(from, 50 * 1000 * 1000, 3,
           1, to);
+
+      result = personalWalletApiWrapper.freezeBalance(from, 50 * 1000 * 1000, 3,
+          0, to);
 
       logger.info("freezeBalance result:{}", result);
     } catch (Exception exception) {
@@ -335,6 +369,154 @@ public class PersonalClient {
     } catch (Exception exception) {
       logger.error(exception.getMessage());
     }
+  }
+
+
+  public void createSmartContract() throws IOException {
+    URL resource = PersonalClient.class.getResource("/");
+    if (resource == null) {
+      return;
+    }
+
+    String classPath = resource.getPath();
+    String abiPath = classPath + "PersonalSmartContract.abi";
+    String binPath = classPath + "PersonalSmartContract.bin";
+
+    String from = "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o";
+    String contractName = "PersonalContract2";
+    String abiStr = FileUtils.readFileToString(new File(abiPath), "utf-8");
+    String codeStr = FileUtils.readFileToString(new File(binPath), "utf-8");
+    String constructorStr = "";
+    String argsStr = "";
+    long feeLimit = 100 * 1000 * 1000L;
+    long consumeUserResourcePercent = 100L;
+    long originEnergyLimit = 1000 * 1000L;
+    long value = 10;
+    long tokenValue = 0;
+    String tokenId = "";
+    String libraryAddressPair = null;
+    String compilerVersion = null;
+    try {
+
+      boolean result = personalWalletApiWrapper.deployContract(from, contractName, abiStr, codeStr,
+          feeLimit, value, consumeUserResourcePercent, originEnergyLimit, tokenValue, tokenId,
+          libraryAddressPair, compilerVersion);
+
+      logger.info("deployContract result:{}", result);
+    } catch (Exception exception) {
+      logger.error(exception.getMessage());
+    }
+  }
+
+  public void triggerSmartContract() {
+
+    String contractAddress = "TYRxYxQwAcbBiJhrXEV3gxh6Qeby2u7wNn";
+
+    String from = "TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf";
+    String methodStr = "setA(uint256)";
+    String argsStr = "500";
+    byte[] input = Hex.decode(AbiUtil.parseMethod(methodStr, argsStr, false));
+    long feeLimit = 100 * 1000 * 1000;
+    long callValue = 0;
+    long tokenValue = 0;
+    String tokenId = "";
+    boolean isConstant = false;
+
+    try {
+
+      boolean result = personalWalletApiWrapper.callContract(from, contractAddress, callValue,
+          input, feeLimit, tokenValue, tokenId, isConstant);
+
+      logger.info("callContract result:{}", result);
+    } catch (Exception exception) {
+      logger.error(exception.getMessage());
+    }
+  }
+
+  private void updateSettingContract() {
+
+    String contractAddress = "TYRxYxQwAcbBiJhrXEV3gxh6Qeby2u7wNn";
+
+    String from = "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o";
+
+    long consumeUserResourcePercent = 90L;
+    try {
+
+      boolean result = personalWalletApiWrapper.updateSettingContract(from, contractAddress,
+          consumeUserResourcePercent);
+
+      logger.info("callContract result:{}", result);
+    } catch (Exception exception) {
+      logger.error(exception.getMessage());
+    }
+  }
+
+  private void accountPermissionUpdate() {
+    String from = "TXzNRYyYfHB2WmLe1JYYbL7kjzbN5FYiB7";
+
+    JsonObject key1 = new JsonObject();
+    key1.addProperty("address", "TWvMa22K677paNS4CMvdvaJ3TqYZv2EG6o");
+    key1.addProperty("weight", 1);
+
+    JsonObject key2 = new JsonObject();
+    key2.addProperty("address", "TY7muqKzjTtpiGrXkvDGNF5EZkb5JYSijf");
+    key2.addProperty("weight", 1);
+
+    JsonArray keys = new JsonArray();
+    keys.add(key1);
+    keys.add(key2);
+
+    JsonObject permissionJsonObj = new JsonObject();
+
+    JsonObject owner = new JsonObject();
+    owner.addProperty("type", 0);
+    owner.addProperty("permission_name", "owner");
+    owner.addProperty("threshold", 2);
+    owner.addProperty("parent_id", 0);
+    owner.add("keys", keys);
+
+    JsonArray witnessKeys = new JsonArray();
+    witnessKeys.add(key1);
+    JsonObject witness = new Gson().fromJson(owner.toString(), JsonObject.class);
+    witness.addProperty("type", 1);
+    witness.addProperty("threshold", 1);
+    witness.addProperty("permission_name", "witness");
+    witness.add("keys", witnessKeys);
+
+    String operations = getOperations(new Integer[]{0, 1, 2, 3, 4, 5, 6, 8, 9, 10, 11, 12});
+
+    JsonObject active = new Gson().fromJson(owner.toString(), JsonObject.class);
+    active.addProperty("type", 2);
+    active.addProperty("permission_name", "active0");
+    active.addProperty("operations", operations);
+    active.add("keys", keys);
+
+    JsonArray actives = new JsonArray();
+    actives.add(active);
+
+    permissionJsonObj.add("owner_permission", owner);
+    permissionJsonObj.add("witness_permission", witness);
+    permissionJsonObj.add("active_permissions", actives);
+
+    String permissionJson = permissionJsonObj.toString();
+
+    try {
+
+      boolean result = personalWalletApiWrapper.accountPermissionUpdate(from, permissionJson);
+
+      logger.info("accountPermissionUpdate result:{}", result);
+    } catch (Exception exception) {
+      logger.error(exception.getMessage());
+    }
+  }
+
+  public static String getOperations(Integer[] contractId) {
+    List<Integer> list = new ArrayList<>(Arrays.asList(contractId));
+    byte[] operations = new byte[32];
+    list.forEach(e -> {
+      operations[e / 8] |= (1 << e % 8);
+    });
+    return ByteArray.toHexString(operations);
   }
 
 
